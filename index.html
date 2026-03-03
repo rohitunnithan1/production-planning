@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sherpa AMR · Build Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--s1:#111418;--s2:#181d24;--bdr:#232a35;--acc:#00d4ff;--acc2:#7b61ff;--grn:#00e5a0;--ylw:#f5c518;--red:#ff4d6d;--org:#ff8c42;--txt:#e8edf3;--mut:#5a6678}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--bdr);background:rgba(17,20,24,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#000}
+.logo-text{font-size:16px;font-weight:800;letter-spacing:-.5px}.logo-text span{color:var(--acc)}
+
+.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.btn{padding:7px 14px;border-radius:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;border:1px solid var(--bdr)}
+.btn-acc{background:var(--acc);color:#000;border-color:var(--acc)}.btn-acc:hover{background:#00bbdf}
+.btn-ghost{background:var(--s2);color:var(--txt)}.btn-ghost:hover{border-color:var(--acc)}
+/* Page Tabs */
+.page-tabs{display:flex;gap:0;border-bottom:1px solid var(--bdr);background:rgba(17,20,24,.92);backdrop-filter:blur(12px);position:sticky;top:61px;z-index:90}
+.page-tab{padding:12px 24px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:none;color:var(--mut);font-family:'Syne',sans-serif;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.3px}
+.page-tab:hover{color:var(--txt)}
+.page-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+main{display:grid;grid-template-columns:220px 1fr;height:calc(100vh - 61px - 45px);transition:grid-template-columns .2s}
+main.no-sidebar{grid-template-columns:0 1fr}
+sidebar{border-right:1px solid var(--bdr);background:var(--s1);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:2px;transition:opacity .2s}
+main.no-sidebar sidebar{opacity:0;pointer-events:none;overflow:hidden}
+.slbl{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mut);text-transform:uppercase;padding:3px 8px;margin-top:8px}
+.sf{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.sf:hover{background:var(--s2);border-color:var(--bdr)}.sf.active{background:var(--s2);border-color:var(--acc)}
+.sfl{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.sdotbox{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.scnt{font-family:'Space Mono',monospace;font-size:10px;background:var(--bg);padding:2px 6px;border-radius:8px;color:var(--mut)}
+.content{overflow-y:auto;padding:16px}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+
+.search-box{flex:1;min-width:140px;max-width:200px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:7px 12px;color:var(--txt);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+.search-box:focus{border-color:var(--acc)}
+.filter-sel{background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;color:var(--txt);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;outline:none}
+/* List */
+.list-view{display:block}
+.trow{background:var(--s1);border:1px solid var(--bdr);border-radius:9px;margin-bottom:5px;transition:all .2s;cursor:pointer}
+.trow:hover{border-color:var(--acc)}
+.tinner{display:grid;grid-template-columns:1fr 120px 110px 190px 80px;align-items:center;padding:11px 14px;gap:12px}
+.tn{font-size:13px;font-weight:700}.tid{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);margin-top:2px}
+.tsbdg{font-size:9px;font-weight:700;padding:3px 7px;border-radius:5px;text-align:center;text-transform:uppercase;letter-spacing:.5px}
+.pbar-wrap{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden}.pbar-fill{height:100%;border-radius:3px}
+.tdue{font-size:11px;color:var(--mut);text-align:right}.tdue.late{color:var(--red)}
+.tmat{display:flex;align-items:center;gap:6px}
+.tmat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tmat-info{display:flex;flex-direction:column;gap:1px}
+.tmat-status{font-size:10px;font-weight:700}.tmat-date{font-size:9px;color:var(--mut);font-family:'Space Mono',monospace}
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bdr);border-radius:14px;width:680px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:24px;animation:mIn .2s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mhdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.mtitle{font-size:17px;font-weight:800}
+.mcls{background:var(--s2);border:1px solid var(--bdr);color:var(--txt);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mcls:hover{background:var(--bdr)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.df .dlbl{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;margin-bottom:4px}
+.df .dval{font-size:13px;font-weight:600}
+/* Material section */
+.mat-section{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:12px}
+.mat-section.warn{border-color:rgba(245,197,24,.4);background:rgba(245,197,24,.04)}
+.mat-section.danger{border-color:rgba(255,77,109,.4);background:rgba(255,77,109,.04)}
+.mat-section.ok{border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.04)}
+.mat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mat-status-badge{display:flex;align-items:center;gap:7px}
+.mat-status-dot{width:9px;height:9px;border-radius:50%}
+.mat-status-label{font-size:13px;font-weight:700}
+.mat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mf .mflbl{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
+.mf .mfval{font-size:12px;font-weight:600}
+.mf .mfval.late{color:var(--red)}.mf .mfval.ok{color:var(--grn)}
+/* Component table */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table thead tr{border-bottom:1px solid var(--bdr)}
+.comp-table th{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;padding:6px 10px;text-align:left}
+.comp-table tbody tr{border-bottom:1px solid rgba(35,42,53,.6);transition:background .1s}
+.comp-table tbody tr:hover{background:rgba(255,255,255,.02)}
+.comp-table tbody tr:last-child{border-bottom:none}
+.comp-name{padding:8px 10px;font-weight:600;color:var(--txt)}
+.comp-qty{padding:8px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--acc);font-weight:700}
+.comp-date{padding:8px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--mut)}
+.comp-date.comp-arrived{color:var(--grn)}
+.comp-date.comp-pending{color:var(--ylw)}
+.comp-status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.comp-status-txt{font-size:11px;font-weight:600}
+/* Progress rail */
+.prog-rail{margin-bottom:16px}
+.prog-steps{display:flex;gap:2px;margin-bottom:5px}
+.prog-step{flex:1;height:5px;border-radius:2px}
+.prog-labels{display:flex;gap:2px;margin-bottom:10px}
+.prog-lbl{flex:1;font-size:7px;color:var(--mut);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sec-title{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;margin-bottom:8px}
+.divider{border:none;border-top:1px solid var(--bdr);margin:14px 0}
+.badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,212,255,.1);color:var(--acc);border:1px solid rgba(0,212,255,.2);white-space:nowrap}
+.badge-eng{background:rgba(123,97,255,.1);color:var(--acc2);border-color:rgba(123,97,255,.2)}
+.badge-rej{background:rgba(255,77,109,.1);color:var(--red);border-color:rgba(255,77,109,.3)}
+.upload-zone{border:2px dashed var(--bdr);border-radius:10px;padding:26px;text-align:center;margin-bottom:14px;cursor:pointer;transition:border-color .15s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--acc)}
+.toast-c{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+
+.toast{padding:10px 16px;border-radius:9px;font-size:12px;font-weight:600;border:1px solid var(--bdr);background:var(--s1);animation:tIn .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.ok{border-color:rgba(0,229,160,.4);color:var(--grn)}.toast.err{border-color:rgba(255,77,109,.4);color:var(--red)}.toast.inf{border-color:rgba(0,212,255,.4);color:var(--acc)}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sc::-webkit-scrollbar{width:3px;height:3px}.sc::-webkit-scrollbar-track{background:transparent}.sc::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+/* Material Planning Panel */
+.mp-panel{background:transparent;display:flex;flex-direction:column;gap:16px}
+/* Criticality config grid */
+.mp-config{padding:14px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:12px}
+.mp-config-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mut);text-transform:uppercase;margin-bottom:10px}
+.mp-amr-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mp-amr-grid{display:grid;gap:0;font-size:10px;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;min-width:max-content}
+.mp-col-hdr{padding:6px 4px;text-align:center;font-size:9px;font-weight:700;background:var(--bg);color:var(--mut);border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr);line-height:1.3;cursor:default}
+.mp-col-hdr:last-child{border-right:none}
+.mp-row-lbl{padding:7px 10px;font-size:10px;font-weight:600;color:var(--txt);background:var(--bg);border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr);display:flex;align-items:center}
+.mp-row-lbl:last-of-type{border-bottom:none}
+.mp-cell{display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr);background:var(--s1);min-height:36px;padding:6px}
+.mp-cell:last-child{border-right:none}
+.mp-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--acc);flex-shrink:0}
+/* Summary table */
+.mp-summary{padding:14px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:12px}
+.mp-sum-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mut);text-transform:uppercase;margin-bottom:10px}
+.mp-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mp-table{width:100%;border-collapse:collapse;font-size:11px;min-width:560px}
+.mp-table th{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.mp-table tbody tr{border-bottom:1px solid rgba(35,42,53,.5);transition:background .1s;cursor:pointer}
+.mp-table tbody tr:hover{background:rgba(255,255,255,.02)}
+.mp-table tbody tr:last-child{border-bottom:none}
+.mp-table td{padding:8px 10px;vertical-align:top}
+.mp-build{font-weight:700;font-size:11px}
+.mp-sub{font-size:9px;color:var(--mut);margin-top:2px;font-family:'Space Mono',monospace}
+.mp-stage-bdg{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.mp-clear{color:var(--grn);font-weight:700;font-size:11px}
+.mp-missing{color:var(--mut);font-size:10px;font-style:italic}
+.mp-gate-item{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+.mp-gate-item:last-child{margin-bottom:0}
+.mp-gate-name{font-size:10px;font-weight:600;color:var(--txt)}
+.mp-gate-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--red);white-space:nowrap}
+.mp-gate-days{font-size:9px;color:var(--mut)}
+.mp-section-row td{padding:4px 10px;background:var(--bg);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+.mp-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px}
+.mp-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mut)}
+.mp-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Forecast */
+.fc-lt-grid{display:grid;grid-template-columns:180px repeat(3,1fr);gap:0;border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
+.fc-lt-hdr{padding:7px 12px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr)}
+.fc-lt-hdr:last-child{border-right:none}
+.fc-lt-lbl{padding:8px 12px;font-size:11px;font-weight:600;color:var(--txt);background:var(--bg);border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr);display:flex;align-items:center}
+.fc-lt-lbl:last-of-type{border-bottom:none}
+.fc-lt-cell{border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;padding:4px 8px;background:var(--s1)}
+.fc-lt-cell:last-child{border-right:none}
+.fc-lt-input{width:64px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;color:var(--txt);font-family:'Space Mono',monospace;font-size:12px;font-weight:700;text-align:center;outline:none;transition:border-color .15s}
+.fc-lt-input:focus{border-color:var(--acc)}
+.fc-total{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--acc)}
+.fc-amr-block{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.fc-amr-hdr{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fc-amr-name{font-size:13px;font-weight:800}
+.fc-amr-meta{font-size:10px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap}
+.fc-amr-meta span{display:flex;align-items:center;gap:4px}
+.fc-table{width:100%;border-collapse:collapse;font-size:11px}
+.fc-table th{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;padding:7px 12px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap;background:var(--bg)}
+.fc-table th.right{text-align:right}
+.fc-table th.center{text-align:center}
+.fc-table tbody tr{border-bottom:1px solid rgba(35,42,53,.5);transition:background .1s}
+.fc-table tbody tr:hover{background:rgba(255,255,255,.015)}
+.fc-table tbody tr:last-child{border-bottom:none}
+.fc-table td{padding:9px 12px;vertical-align:middle}
+.fc-part-name{font-weight:700;font-size:11px}
+.fc-build-cell{text-align:center;font-family:'Space Mono',monospace;font-size:10px}
+.fc-need-date{font-weight:700}
+.fc-need-ok{color:var(--grn)}
+.fc-need-warn{color:var(--ylw)}
+.fc-need-late{color:var(--red)}
+.fc-need-none{color:var(--mut);font-style:italic;font-family:'Syne',sans-serif;font-size:10px}
+.fc-disp-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap}
+.fc-no-lt{color:var(--mut);font-size:12px;font-style:italic;padding:12px 16px}
+.fc-empty{text-align:center;padding:40px;color:var(--mut);font-size:13px}
+/* Material Summary Table */
+.ms-wrap{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.ms-hdr{padding:13px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ms-title{font-size:13px;font-weight:800}
+.ms-sub{font-size:10px;color:var(--mut)}
+.ms-scroll{overflow-x:auto}
+.ms-table{width:100%;border-collapse:collapse;font-size:11px}
+.ms-table th{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mut);padding:7px 14px;border-bottom:1px solid var(--bdr);white-space:nowrap;background:var(--bg);text-align:left}
+.ms-table th.right{text-align:right}
+.ms-table tbody tr{border-bottom:1px solid rgba(35,42,53,.5);cursor:pointer;transition:background .1s}
+.ms-table tbody tr:hover{background:rgba(255,255,255,.02)}
+.ms-table tbody tr:last-child{border-bottom:none}
+.ms-table td{padding:9px 14px;vertical-align:top}
+.ms-build{font-weight:700;font-size:11px}
+.ms-meta{font-size:9px;color:var(--mut);margin-top:2px;font-family:'Space Mono',monospace}
+.ms-stage{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap}
+.ms-part-row{display:flex;flex-direction:column;gap:4px}
+.ms-part{display:flex;align-items:baseline;gap:6px;font-size:10px}
+.ms-pname{font-weight:700;color:var(--txt);min-width:130px}
+.ms-delayed{color:var(--red);font-family:'Space Mono',monospace;font-size:10px}
+.ms-order-by{color:var(--ylw);font-family:'Space Mono',monospace;font-size:10px}
+.ms-order-ok{color:var(--grn);font-family:'Space Mono',monospace;font-size:10px}
+.ms-order-overdue{color:var(--red);font-family:'Space Mono',monospace;font-size:10px;font-weight:700}
+.ms-none{color:var(--mut);font-size:10px;font-style:italic}
+.ms-section-hdr td{background:var(--bg);padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+.notes-btn{background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:4px 9px;font-size:10px;font-weight:600;color:var(--mut);cursor:pointer;transition:all .15s;white-space:nowrap}
+.notes-btn:hover{border-color:var(--acc);color:var(--acc)}
+.notes-btn-has{border-color:rgba(99,179,237,.4);color:var(--acc);background:rgba(99,179,237,.08)}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo"><div class="logo-icon">AMR</div><div class="logo-text">Sherpa <span>BuildOps</span></div></div>
+
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="openNotesSummary()">📋 Notes Summary</button>
+    <label class="btn btn-ghost" style="cursor:pointer">⬆ Import CSV<input type="file" id="csv-input" accept=".csv" style="display:none"></label>
+    <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export</button>
+    <button class="btn btn-ghost" onclick="resetToSeed()">↺ Reset</button>
+  </div>
+</header>
+
+<!-- Page-level tabs -->
+<div class="page-tabs">
+  <button class="page-tab active" id="tab-prod" onclick="switchPageTab('prod')">🏭 Production Planning</button>
+  <button class="page-tab" id="tab-mat" onclick="switchPageTab('mat')">🧩 Material Planning</button>
+  <button class="page-tab" id="tab-forecast" onclick="switchPageTab('forecast')">📦 Forecast</button>
+</div>
+
+<main id="main-layout">
+<sidebar class="sc">
+  <div class="slbl">Overview</div>
+  <div class="sf active" onclick="filterStage('all',this)"><div class="sfl"><div class="sdotbox" style="background:var(--mut)"></div>All Builds</div><span class="scnt" id="cnt-all">0</span></div>
+  <div class="slbl">Pre-Production</div>
+  <div class="sf" onclick="filterStage('TO_DO',this)"><div class="sfl"><div class="sdotbox" style="background:#94a3b8"></div>To Do</div><span class="scnt" id="cnt-TO_DO">0</span></div>
+  <div class="sf" onclick="filterStage('IN_PROGRESS',this)"><div class="sfl"><div class="sdotbox" style="background:#60a5fa"></div>In Progress</div><span class="scnt" id="cnt-IN_PROGRESS">0</span></div>
+  <div class="slbl">Procurement</div>
+  <div class="sf" onclick="filterStage('MRS_RAISED',this)"><div class="sfl"><div class="sdotbox" style="background:#f5c518"></div>MRS Raised</div><span class="scnt" id="cnt-MRS_RAISED">0</span></div>
+  <div class="sf" onclick="filterStage('KITTING_ISSUED',this)"><div class="sfl"><div class="sdotbox" style="background:#fb923c"></div>Kitting Issued</div><span class="scnt" id="cnt-KITTING_ISSUED">0</span></div>
+  <div class="slbl">Assembly</div>
+  <div class="sf" onclick="filterStage('SUB_ASSY',this)"><div class="sfl"><div class="sdotbox" style="background:#818cf8"></div>Sub Assy</div><span class="scnt" id="cnt-SUB_ASSY">0</span></div>
+  <div class="sf" onclick="filterStage('MECHANICAL_ASSEMBLY',this)"><div class="sfl"><div class="sdotbox" style="background:#3b9eff"></div>Mechanical Assy</div><span class="scnt" id="cnt-MECHANICAL_ASSEMBLY">0</span></div>
+  <div class="sf" onclick="filterStage('ELECTRONICS_ASSEMBLY',this)"><div class="sfl"><div class="sdotbox" style="background:#a78bfa"></div>Electronics Assy</div><span class="scnt" id="cnt-ELECTRONICS_ASSEMBLY">0</span></div>
+  <div class="slbl">Testing</div>
+  <div class="sf" onclick="filterStage('VEHICLE_BRINGUP',this)"><div class="sfl"><div class="sdotbox" style="background:#22d3ee"></div>Vehicle Bringup</div><span class="scnt" id="cnt-VEHICLE_BRINGUP">0</span></div>
+  <div class="sf" onclick="filterStage('VALIDATION',this)"><div class="sfl"><div class="sdotbox" style="background:#34d399"></div>Validation</div><span class="scnt" id="cnt-VALIDATION">0</span></div>
+  <div class="sf" onclick="filterStage('FINAL_ASSEMBLY',this)"><div class="sfl"><div class="sdotbox" style="background:#86efac"></div>Final Assembly</div><span class="scnt" id="cnt-FINAL_ASSEMBLY">0</span></div>
+  <div class="slbl">Dispatch</div>
+  <div class="sf" onclick="filterStage('PDI',this)"><div class="sfl"><div class="sdotbox" style="background:#fbbf24"></div>PDI</div><span class="scnt" id="cnt-PDI">0</span></div>
+  <div class="sf" onclick="filterStage('DISPATCH',this)"><div class="sfl"><div class="sdotbox" style="background:#f59e0b"></div>Dispatch</div><span class="scnt" id="cnt-DISPATCH">0</span></div>
+  <div class="sf" onclick="filterStage('DONE',this)"><div class="sfl"><div class="sdotbox" style="background:#00e5a0"></div>Done</div><span class="scnt" id="cnt-DONE">0</span></div>
+  <div class="slbl">Other</div>
+  <div class="sf" onclick="filterStage('REJECTED',this)"><div class="sfl"><div class="sdotbox" style="background:#ff4d6d"></div>Rejected</div><span class="scnt" id="cnt-REJECTED">0</span></div>
+</sidebar>
+<div class="content sc">
+  <!-- Tab pane: Production Planning -->
+  <div id="pane-prod">
+    <div class="toolbar">
+      <input class="search-box" id="search" placeholder="Search builds…" oninput="renderAll()">
+      <select class="filter-sel" id="amr-filter" onchange="renderAll()"><option value="">All AMR Types</option></select>
+      <select class="filter-sel" id="btype-filter" onchange="renderAll()">
+        <option value="">All Build Types</option><option value="Production">Production</option><option value="Engineering">Engineering</option>
+      </select>
+      <select class="filter-sel" id="mat-filter" onchange="renderAll()">
+        <option value="">All Material</option>
+        <option value="Not yet ordered">Not Yet Ordered</option>
+        <option value="Ordered">Ordered</option>
+        <option value="IQC">IQC</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+    <div class="list-view" id="lv"></div>
+  </div>
+
+  <!-- Tab pane: Material Planning -->
+  <div id="pane-mat" style="display:none">
+    <div class="mp-panel" id="mp-panel">
+      <div class="mp-config">
+        <div class="mp-config-lbl">Critical Parts by AMR Type — toggle to mark as critical</div>
+        <div class="mp-amr-grid-wrap"><div class="mp-amr-grid" id="mp-grid" style="--cols:10"></div></div>
+      </div>
+      <div class="mp-summary">
+        <div class="mp-sum-lbl">Build Material Status — active builds only (excl. To Do · Dispatch · Done · Rejected)
+          <span id="mp-summary-badge" style="font-size:9px;font-weight:600;color:var(--mut);margin-left:8px"></span>
+        </div>
+        <div id="mp-table-wrap"></div>
+        <div class="mp-legend">
+          <div class="mp-leg-item"><div class="mp-leg-dot" style="background:var(--grn)"></div>Clear to build</div>
+          <div class="mp-leg-item"><div class="mp-leg-dot" style="background:var(--mut)"></div>Missing dates</div>
+          <div class="mp-leg-item"><div class="mp-leg-dot" style="background:var(--red)"></div>Gated by material</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab pane: Forecast -->
+  <div id="pane-forecast" style="display:none">
+    <!-- Lead-time config card -->
+    <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mut);text-transform:uppercase;margin-bottom:12px">
+        Build Lead Times by AMR Type — days required from material ready to dispatch
+      </div>
+      <div id="fc-leadtime-grid"></div>
+    </div>
+    <!-- Material Summary -->
+    <div id="fc-summary"></div>
+  </div>
+</div>
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-ov" id="detail-ov" onclick="if(event.target===this)closeDetail()">
+  <div class="modal sc">
+    <div class="mhdr">
+      <div>
+        <div class="mtitle" id="d-title"></div>
+        <div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--mut)" id="d-key"></span>
+          <span id="d-badges" style="display:flex;gap:5px;flex-wrap:wrap"></span>
+        </div>
+      </div>
+      <button class="mcls" onclick="closeDetail()">&#xD7;</button>
+    </div>
+    <div class="prog-rail">
+      <div class="sec-title">Build Progress</div>
+      <div class="prog-labels" id="d-plabels"></div>
+      <div class="prog-steps" id="d-psteps"></div>
+    </div>
+    <div id="d-dispatch-status" style="margin-bottom:14px"></div>
+    <div class="sec-title">Material Overview</div>
+    <div id="d-material-overview"></div>
+    <hr class="divider">
+    <div class="sec-title" style="margin-bottom:10px">Component Availability</div>
+    <div id="d-components" style="margin-bottom:16px"></div>
+    <hr class="divider">
+    <div class="fgrid" id="d-meta"></div>
+    <hr class="divider">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="sec-title" style="margin-bottom:0">Notes</div>
+      <div style="font-size:9px;color:var(--mut)" id="d-notes-saved"></div>
+    </div>
+    <textarea id="d-notes-input" placeholder="Add notes for this build — weekly call updates, stakeholder input, action items…"
+      style="width:100%;min-height:100px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;
+             color:var(--txt);font-family:'Syne',sans-serif;font-size:12px;line-height:1.6;resize:vertical;outline:none;
+             box-sizing:border-box;transition:border-color .15s"
+      oninput="autoSaveNote(this)"
+      onfocus="this.style.borderColor='var(--acc)'"
+      onblur="this.style.borderColor='var(--bdr)'"></textarea>
+
+  </div>
+</div>
+
+<!-- Notes Quick Modal -->
+<div class="modal-ov" id="notes-ov" onclick="if(event.target===this)closeNotes()">
+  <div class="modal" style="width:480px">
+    <div class="mhdr">
+      <div>
+        <div class="mtitle" id="notes-title">Notes</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:3px" id="notes-sub"></div>
+      </div>
+      <button class="mcls" onclick="closeNotes()">&#xD7;</button>
+    </div>
+    <div style="padding:16px">
+      <textarea id="notes-input" placeholder="Add notes — weekly call updates, stakeholder input, action items…"
+        style="width:100%;min-height:140px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+               padding:10px 12px;color:var(--txt);font-family:'Syne',sans-serif;font-size:12px;line-height:1.6;
+               resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s"
+        oninput="autoSaveNote(this)"
+        onfocus="this.style.borderColor='var(--acc)'"
+        onblur="this.style.borderColor='var(--bdr)'"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <div style="font-size:9px;color:var(--mut)" id="notes-saved"></div>
+        <button class="btn btn-acc" onclick="closeNotes()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-ov" id="upload-ov" onclick="if(event.target===this)closeUpload()">
+  <div class="modal" style="width:460px">
+    <div class="mhdr">
+      <div><div class="mtitle">Import Jira CSV</div><div style="font-size:12px;color:var(--mut);margin-top:3px">Upload a fresh Jira export to refresh all builds</div></div>
+      <button class="mcls" onclick="closeUpload()">&#xD7;</button>
+    </div>
+    <div class="upload-zone" id="drop-zone"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)"
+      onclick="document.getElementById('csv-input2').click()">
+      <div style="font-size:26px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">Drop Jira CSV here</div>
+      <div style="font-size:11px;color:var(--mut)">Jira → Issues → Export CSV (All Fields)</div>
+      <input type="file" id="csv-input2" accept=".csv" style="display:none" onchange="handleCSVFile(this.files[0])">
+    </div>
+    <div id="upload-preview" style="display:none">
+      <div style="font-size:12px;color:var(--mut);margin-bottom:12px;line-height:1.6" id="upload-stats"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeUpload()">Cancel</button>
+        <button class="btn btn-acc" style="flex:1" onclick="applyImport()">Apply Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-c" id="toasts"></div>
+
+<!-- Notes Summary Modal -->
+<div class="modal-ov" id="nsummary-ov" onclick="if(event.target===this)closeNotesSummary()">
+  <div class="modal" style="width:620px;max-height:80vh;display:flex;flex-direction:column">
+    <div class="mhdr" style="flex-shrink:0">
+      <div>
+        <div class="mtitle">📋 Notes Summary</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:3px" id="nsummary-sub"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost" id="nsummary-copy-btn" onclick="copyNotesSummary()" style="font-size:11px;padding:5px 12px">⎘ Copy All</button>
+        <button class="mcls" onclick="closeNotesSummary()">&#xD7;</button>
+      </div>
+    </div>
+    <div id="nsummary-body" style="overflow-y:auto;padding:16px 18px;flex:1"></div>
+  </div>
+</div>
+
+<script>
+
+const STAGES = [
+  {id:'TO_DO',               label:'To Do',                short:'To Do',    color:'#94a3b8', prog:5},
+  {id:'IN_PROGRESS',         label:'In Progress',          short:'In Prog.', color:'#60a5fa', prog:12},
+  {id:'MRS_RAISED',          label:'MRS Raised',           short:'MRS',      color:'#f5c518', prog:22},
+  {id:'KITTING_ISSUED',      label:'Kitting Issued',       short:'Kitting',  color:'#fb923c', prog:33},
+  {id:'SUB_ASSY',            label:'Sub Assy',             short:'Sub Assy', color:'#818cf8', prog:42},
+  {id:'MECHANICAL_ASSEMBLY', label:'Mechanical Assembly',  short:'Mech.',    color:'#3b9eff', prog:52},
+  {id:'ELECTRONICS_ASSEMBLY',label:'Electronics Assembly', short:'Elec.',    color:'#a78bfa', prog:62},
+  {id:'VEHICLE_BRINGUP',     label:'Vehicle Bringup',      short:'Bringup',  color:'#22d3ee', prog:72},
+  {id:'VALIDATION',          label:'Validation',           short:'Valid.',   color:'#34d399', prog:82},
+  {id:'FINAL_ASSEMBLY',      label:'Final Assembly',       short:'Final',    color:'#86efac', prog:89},
+  {id:'PDI',                 label:'PDI',                  short:'PDI',      color:'#fbbf24', prog:94},
+  {id:'DISPATCH',            label:'Dispatch',             short:'Dispatch', color:'#f59e0b', prog:97},
+  {id:'DONE',                label:'Done',                 short:'Done',     color:'#00e5a0', prog:100},
+  {id:'REJECTED',            label:'Rejected',             short:'Rejected', color:'#ff4d6d', prog:0},
+];
+const PROG_IDS = STAGES.filter(s=>s.id!=='REJECTED').map(s=>s.id);
+
+const STATUS_MAP = {
+  'To Do':'TO_DO','In Progress':'IN_PROGRESS','MRS Raised':'MRS_RAISED',
+  'Kitting Issued':'KITTING_ISSUED','Sub Assy':'SUB_ASSY',
+  'Mechanical Assembly':'MECHANICAL_ASSEMBLY',
+  'Electrical Assembly':'ELECTRONICS_ASSEMBLY',
+  'Electronics Assembly':'ELECTRONICS_ASSEMBLY',
+  'vehicle Bringup':'VEHICLE_BRINGUP','Vehicle Bringup':'VEHICLE_BRINGUP',
+  'Validation':'VALIDATION','Final Assembly':'FINAL_ASSEMBLY',
+  'PDI':'PDI','Dispatch':'DISPATCH','Done':'DONE','Rejected':'REJECTED',
+};
+
+const COMPONENTS = [
+  {key:'chassis',           label:'Chassis'},
+  {key:'panel',             label:'Panel'},
+  {key:'cpBoard',           label:'CP Board'},
+  {key:'hubMotor',          label:'Hub Motor / Drive Unit'},
+  {key:'lidar',             label:'Lidar'},
+  {key:'wiringHarness',     label:'Wiring Harness'},
+  {key:'autoUnhitch',       label:'Auto Unhitch'},
+  {key:'electronicsBoards', label:'Electronics Boards'},
+  {key:'battery',           label:'Battery'},
+  {key:'charger',           label:'Charger'},
+  {key:'chargerBay',        label:'Charger Bay'},
+];
+
+const MAT_CFG = {
+  'completed':       {color:'#00e5a0', label:'Material Ready', cls:'ok'},
+  'IQC':             {color:'#00d4ff', label:'In IQC',         cls:''},
+  'Ordered':         {color:'#f5c518', label:'Ordered',        cls:'warn'},
+  'Not yet ordered': {color:'#ff4d6d', label:'Not Yet Ordered',cls:'danger'},
+  '':                {color:'#5a6678', label:'No Data',        cls:''},
+};
+const matCfg = s => MAT_CFG[s] || MAT_CFG[''];
+
+const SEED = [{"key":"MOM-2","name":"Meri Life Science - Vapi","customer":"Meri Life Science - Vapi","vehicleSerial":"XT 11","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-10-08","mrsActual":"2025-10-09","productionPlan":"2025-10-18","productionActual":"2025-10-21","validationPlan":"2025-10-25","validationActual":"2025-11-04","dispatchPlan":"2025-10","dispatchActual":"2025-11-04","dueDate":"2025-10-31","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-10","kittingActual":"2025-10-15","kittingDelayDays":"5","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-3","name":"Denso Kirloskar - Bangalore","customer":"Denso Kirloskar - Bangalore","vehicleSerial":"XT 16","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-10-17","mrsActual":"2025-10-17","productionPlan":"2025-10-23","productionActual":"2025-10-24","validationPlan":"2025-10-27","validationActual":"2025-10-29","dispatchPlan":"2025-10","dispatchActual":"2025-10-31","dueDate":"2025-10-25","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-20","kittingActual":"2025-10-22","kittingDelayDays":"2","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-4","name":"Thailand Demo","customer":"Thailand Demo","vehicleSerial":"XT 01","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-10-24","mrsActual":"2025-10-24","productionPlan":"2025-10-30","productionActual":"2025-10-31","validationPlan":"2025-11-05","validationActual":"2025-11-27","dispatchPlan":"2025-10","dispatchActual":"2025-11-30","dueDate":"2025-11-05","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-28","kittingActual":"2025-10-29","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-5","name":"Turbo Energy - Pulivalam","customer":"Turbo Energy - Pulivalam","vehicleSerial":"XT 19","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-10-17","mrsActual":"2025-10-17","productionPlan":"2025-11-05","productionActual":"2025-11-11","validationPlan":"2025-11-11","validationActual":"2025-11-13","dispatchPlan":"2025-11","dispatchActual":"2025-11-14","dueDate":"2025-11-10","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-20","kittingActual":"2025-10-20","kittingDelayDays":"0","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-6","name":"Sai Life Sciences - Hyderabad","customer":"Sai Life Sciences - Hyderabad","vehicleSerial":"XT 21","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-24","mrsActual":"2025-11-24","productionPlan":"2025-11-26","productionActual":"2025-12-01","validationPlan":"2025-12-05","validationActual":"2025-12-26","dispatchPlan":"2025-12","dispatchActual":"2025-12-29","dueDate":"2025-12-24","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-26","kittingActual":"2025-11-28","kittingDelayDays":"2","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-7","name":"ELECTROLUX Thailand-1","customer":"ELECTROLUX Thailand-1","vehicleSerial":"10K 10","amrType":"","buildType":"Production","stage":"ELECTRONICS_ASSEMBLY","jiraStatus":"Electrical / Electronics Assembly","priority":"medium","mrsPlan":"2026-01-28","mrsActual":"2026-01-28","productionPlan":"2026-02-06","productionActual":"","validationPlan":"2026-02-16","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-03-06","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-06","kittingPlan":"2026-02-02","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-03"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-02-20"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-03-06"},"charger":{"qty":"","date":"2026-02-25"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-8","name":"Yokohama Dahej -1","customer":"Yokohama Dahej -1","vehicleSerial":"10K 12","amrType":"","buildType":"Production","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"2026-01-28","mrsActual":"2026-01-28","productionPlan":"2026-02-06","productionActual":"","validationPlan":"2026-02-17","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-03-11","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-06","kittingPlan":"2026-02-02","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-09"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-03-06"},"charger":{"qty":"","date":"2026-03-06"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-9","name":"Yokohama Dahej -3","customer":"Yokohama Dahej -3","vehicleSerial":"10K 15","amrType":"","buildType":"Production","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"2026-02-17","mrsActual":"2026-02-17","productionPlan":"2026-02-25","productionActual":"2025-12-29","validationPlan":"2026-03-06","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-27","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-11","kittingPlan":"2025-12-20","kittingActual":"2025-12-11","kittingDelayDays":"-9","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-09"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-11"},"charger":{"qty":"","date":"2026-03-12"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-10","name":"Yokohama Dahej -4","customer":"Yokohama Dahej -4","vehicleSerial":"10K 16","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-02-17","mrsActual":"2026-02-17","productionPlan":"2026-02-25","productionActual":"","validationPlan":"2026-03-06","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-27","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-20","kittingPlan":"2026-02-20","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-13"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-20"},"charger":{"qty":"","date":"2026-03-12"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-11","name":"Yokohama Dahej -5","customer":"Yokohama Dahej -5","vehicleSerial":"10K 17","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-02-17","mrsActual":"2026-02-17","productionPlan":"2026-02-26","productionActual":"","validationPlan":"2026-03-10","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-27","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-20","kittingPlan":"2026-02-20","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-13"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-20"},"charger":{"qty":"","date":"2026-03-12"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-12","name":"Yokohama Dahej -6","customer":"Yokohama Dahej -6","vehicleSerial":"10K 18","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-02-17","mrsActual":"","productionPlan":"2026-02-26","productionActual":"","validationPlan":"2026-03-10","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-27","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-20","kittingPlan":"2026-02-20","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-18"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-20"},"charger":{"qty":"","date":"2026-03-12"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-13","name":"Bekaert Industries -Pune","customer":"Bekaert Industries -Pune","vehicleSerial":"XT 22","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-24","mrsActual":"2025-11-24","productionPlan":"2025-12-22","productionActual":"2025-12-24","validationPlan":"2026-01-08","validationActual":"2026-01-13","dispatchPlan":"2026-01","dispatchActual":"2026-01-14","dueDate":"2026-01-15","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-26","kittingActual":"2025-11-28","kittingDelayDays":"2","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-14","name":"Epiroc Mining- Nashik","customer":"Epiroc Mining- Nashik","vehicleSerial":"XT 20","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2025-12-18","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-01","dispatchActual":"2025-12-24","dueDate":"2026-01-24","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-15","name":"Daikin Compressor - Thailand","customer":"Daikin Compressor - Thailand","vehicleSerial":"XT 23","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2026-01-28","mrsActual":"2026-01-28","productionPlan":"2026-02-06","productionActual":"","validationPlan":"2026-02-16","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"2026-02-10","dueDate":"2026-02-06","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2026-02-02","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":"2026-02-13"},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-19","name":"Mexico Demo","customer":"Mexico Demo","vehicleSerial":"XT lite 17","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-07-19","mrsActual":"2025-07-19","productionPlan":"2025-07-24","productionActual":"2025-09-29","validationPlan":"2025-10-09","validationActual":"2025-10-29","dispatchPlan":"2025-11","dispatchActual":"2025-12-04","dueDate":"2025-10-31","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"2025-07-22","kittingActual":"2025-07-24","kittingDelayDays":"2","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2025-12-01"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-20","name":"Tenneco Puebla","customer":"Tenneco Puebla","vehicleSerial":"XT Lite 17","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-09-26","mrsActual":"2025-09-26","productionPlan":"2025-10-07","productionActual":"2025-10-07","validationPlan":"2025-10-15","validationActual":"2025-12-17","dispatchPlan":"2026-01","dispatchActual":"2025-12-19","dueDate":"2026-01-23","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"2025-09-30","kittingActual":"2025-10-01","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2025-12-01"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-25","name":"Bekaert Industries -Pune","customer":"Bekaert Industries -Pune","vehicleSerial":"XT Lite 19","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"low","mrsPlan":"2025-08-19","mrsActual":"2025-08-19","productionPlan":"2025-09-01","productionActual":"2025-10-17","validationPlan":"2025-10-21","validationActual":"2026-01-13","dispatchPlan":"2025-12","dispatchActual":"2026-01-14","dueDate":"2026-01-09","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"2025-08-22","kittingActual":"2025-08-28","kittingDelayDays":"6","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2025-12-01"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-26","name":"Owens Corning -1","customer":"Owens Corning -1","vehicleSerial":"PM 01","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-09-30","mrsActual":"2025-09-30","productionPlan":"2025-10-09","productionActual":"2025-10-28","validationPlan":"2025-11-20","validationActual":"2025-11-29","dispatchPlan":"2025-11","dispatchActual":"2025-11-30","dueDate":"2025-10-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-02","kittingActual":"2025-10-08","kittingDelayDays":"6","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-27","name":"Owens Corning -2","customer":"Owens Corning -2","vehicleSerial":"PM 02","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-09-30","mrsActual":"2025-09-30","productionPlan":"2025-10-09","productionActual":"2025-10-28","validationPlan":"2025-11-20","validationActual":"2025-11-29","dispatchPlan":"2025-11","dispatchActual":"2025-11-30","dueDate":"2025-10-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-02","kittingActual":"2025-10-08","kittingDelayDays":"6","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-28","name":"Owens Corning -3","customer":"Owens Corning -3","vehicleSerial":"PM 04","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-09-30","mrsActual":"2025-09-30","productionPlan":"2025-10-09","productionActual":"2025-10-30","validationPlan":"2025-11-20","validationActual":"2025-12-10","dispatchPlan":"2025-11","dispatchActual":"2025-12-10","dueDate":"2025-10-21","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-02","kittingActual":"2025-10-08","kittingDelayDays":"6","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-29","name":"Owens Corning -4","customer":"Owens Corning -4","vehicleSerial":"PM 03","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-09-30","mrsActual":"2025-09-30","productionPlan":"2025-10-14","productionActual":"2025-10-30","validationPlan":"2025-11-20","validationActual":"2025-12-10","dispatchPlan":"2025-11","dispatchActual":"2025-12-10","dueDate":"2025-10-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-02","kittingActual":"2025-10-08","kittingDelayDays":"6","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-30","name":"Owens Corning -5","customer":"Owens Corning -5","vehicleSerial":"PM 05","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-10-27","mrsActual":"2025-10-27","productionPlan":"2025-11-12","productionActual":"2025-11-14","validationPlan":"2025-11-22","validationActual":"2025-12-24","dispatchPlan":"2025-12","dispatchActual":"2025-12-26","dueDate":"2025-12-25","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-29","kittingActual":"2025-10-30","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-31","name":"Owens Corning -6","customer":"Owens Corning -6","vehicleSerial":"PM 06","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-10-27","mrsActual":"2025-10-27","productionPlan":"2025-11-12","productionActual":"2025-11-14","validationPlan":"2025-11-22","validationActual":"2025-12-24","dispatchPlan":"2025-12","dispatchActual":"2025-12-26","dueDate":"2025-12-25","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-10-29","kittingActual":"2025-10-30","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-32","name":"Owens Corning -7","customer":"Owens Corning -7","vehicleSerial":"PM 07","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-17","mrsActual":"2025-11-18","productionPlan":"2025-11-27","productionActual":"2025-12-02","validationPlan":"2025-12-19","validationActual":"2025-12-23","dispatchPlan":"2025-12","dispatchActual":"2025-12-26","dueDate":"2025-12-25","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-20","kittingActual":"2025-11-21","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-33","name":"Owens Corning -8","customer":"Owens Corning -8","vehicleSerial":"PM 09","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-17","mrsActual":"2025-11-18","productionPlan":"2025-11-27","productionActual":"2025-12-02","validationPlan":"2025-12-19","validationActual":"2025-12-23","dispatchPlan":"2025-12","dispatchActual":"2025-12-26","dueDate":"2025-12-25","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-20","kittingActual":"2025-11-21","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-36","name":"Mexico Demo","customer":"Mexico Demo","vehicleSerial":"PM 14","amrType":"","buildType":"Production","stage":"VALIDATION","jiraStatus":"Validation","priority":"high","mrsPlan":"2025-12-08","mrsActual":"2025-12-08","productionPlan":"2025-12-17","productionActual":"2025-12-29","validationPlan":"2026-01-05","validationActual":"2026-02-27","dispatchPlan":"2025-12","dispatchActual":"","dueDate":"2026-01-08","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-12-05","kittingPlan":"2025-12-11","kittingActual":"2025-12-11","kittingDelayDays":"0","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-37","name":"Thailand Demo","customer":"Thailand Demo","vehicleSerial":"PM 08","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-12-08","mrsActual":"2025-12-08","productionPlan":"2025-12-18","productionActual":"2026-01-09","validationPlan":"2026-01-10","validationActual":"","dispatchPlan":"2025-12","dispatchActual":"2026-02-23","dueDate":"2026-01-08","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-12-05","kittingPlan":"2025-12-11","kittingActual":"2025-12-11","kittingDelayDays":"0","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-38","name":"India Demo","customer":"India Demo","vehicleSerial":"PM 16","amrType":"","buildType":"Production","stage":"VEHICLE_BRINGUP","jiraStatus":"vehicle Bringup","priority":"high","mrsPlan":"2026-01-09","mrsActual":"2026-01-13","productionPlan":"2026-01-22","productionActual":"","validationPlan":"2025-12-12","validationActual":"","dispatchPlan":"2026-01","dispatchActual":"","dueDate":"2026-01-13","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2026-01-20","kittingActual":"2026-02-04","kittingDelayDays":"15","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-39","name":"Engineering","customer":"Engineering","vehicleSerial":"PM 10","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-25","mrsActual":"2025-11-25","productionPlan":"2025-12-05","productionActual":"2025-12-02","validationPlan":"2026-01-06","validationActual":"2026-02-16","dispatchPlan":"2026-01","dispatchActual":"2026-02-16","dueDate":"2026-01-09","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2025-11-25","kittingPlan":"2025-11-28","kittingActual":"2025-12-30","kittingDelayDays":"32","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-40","name":"Tenneco - Puebla","customer":"Tenneco - Puebla","vehicleSerial":"PM 12","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2026-01-09","mrsActual":"2026-01-13","productionPlan":"2026-01-19","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-01","dispatchActual":"2026-02-28","dueDate":"2026-01-27","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"2026-01-20","kittingActual":"2026-02-04","kittingDelayDays":"15","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-23"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-15"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-43","name":"HUL - Pondicherry","customer":"HUL - Pondicherry","vehicleSerial":"Lite 38","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-26","mrsActual":"2025-11-17","productionPlan":"2025-12-08","productionActual":"2025-11-28","validationPlan":"2025-12-19","validationActual":"2025-12-24","dispatchPlan":"2025-12","dispatchActual":"2025-12-24","dueDate":"2025-12-22","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-12-01","kittingActual":"2025-11-17","kittingDelayDays":"-14","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-44","name":"HUL - Pondicherry","customer":"HUL - Pondicherry","vehicleSerial":"Lite 37","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-11-26","mrsActual":"2025-11-17","productionPlan":"2025-12-08","productionActual":"2025-11-27","validationPlan":"2025-12-19","validationActual":"2025-12-24","dispatchPlan":"2025-12","dispatchActual":"2025-12-24","dueDate":"2025-12-22","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-12-01","kittingActual":"2025-11-17","kittingDelayDays":"-14","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-45","name":"Tenneco - Litchfield MI","customer":"Tenneco - Litchfield MI","vehicleSerial":"10K 01","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-11-18","mrsActual":"2025-11-18","productionPlan":"2025-11-25","productionActual":"2025-11-26","validationPlan":"2025-11-27","validationActual":"2025-12-18","dispatchPlan":"2025-12","dispatchActual":"2025-12-19","dueDate":"2025-12-15","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-20","kittingActual":"2025-11-24","kittingDelayDays":"4","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-46","name":"Tenneco - Litchfield MI","customer":"Tenneco - Litchfield MI","vehicleSerial":"10K 02","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-11-18","mrsActual":"2025-11-18","productionPlan":"2025-11-25","productionActual":"2025-11-26","validationPlan":"2025-11-27","validationActual":"2025-12-18","dispatchPlan":"2025-12","dispatchActual":"2025-12-19","dueDate":"2025-12-15","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"2025-11-20","kittingActual":"2025-11-24","kittingDelayDays":"4","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-47","name":"Tenneco - Canada","customer":"Tenneco - Canada","vehicleSerial":"10K 05","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-12-05","mrsActual":"2025-12-05","productionPlan":"2025-12-25","productionActual":"2026-01-28","validationPlan":"2025-12-24","validationActual":"2026-02-05","dispatchPlan":"2025-12","dispatchActual":"2026-02-10","dueDate":"2026-01-10","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-01-16","kittingPlan":"2025-12-09","kittingActual":"2025-12-10","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-29"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-15"},"battery":{"qty":"","date":"2026-01-16"},"charger":{"qty":"","date":"2026-01-14"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-48","name":"Tenneco - Canada","customer":"Tenneco - Canada","vehicleSerial":"10K 04","amrType":"","buildType":"Engineering","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-12-05","mrsActual":"2025-12-05","productionPlan":"2025-12-25","productionActual":"2026-01-21","validationPlan":"2025-12-31","validationActual":"2026-02-05","dispatchPlan":"2025-12","dispatchActual":"2026-02-10","dueDate":"2026-01-10","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-01-16","kittingPlan":"2025-12-09","kittingActual":"2025-12-10","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-29"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-15"},"battery":{"qty":"","date":"2026-01-16"},"charger":{"qty":"","date":"2026-01-14"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-49","name":"Schneider Electric_ One Campus_ Attibele","customer":"Schneider Electric_ One Campus_ Attibele","vehicleSerial":"10K 08","amrType":"","buildType":"Engineering","stage":"VALIDATION","jiraStatus":"Validation","priority":"high","mrsPlan":"2025-12-05","mrsActual":"2025-12-05","productionPlan":"2026-01-08","productionActual":"2026-02-02","validationPlan":"2026-02-12","validationActual":"","dispatchPlan":"2026-01","dispatchActual":"","dueDate":"2026-01-15","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-02-24","kittingPlan":"2025-12-09","kittingActual":"2025-12-10","kittingDelayDays":"1","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-24"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-15"},"battery":{"qty":"","date":"2026-02-10"},"charger":{"qty":"","date":"2026-02-20"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-50","name":"ContiTech SLP","customer":"ContiTech SLP","vehicleSerial":"10K 07","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-12-24","mrsActual":"2025-12-24","productionPlan":"2026-01-15","productionActual":"2026-02-12","validationPlan":"2026-01-27","validationActual":"2026-02-26","dispatchPlan":"2026-01","dispatchActual":"2026-02-28","dueDate":"2026-01-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"2025-12-30","kittingActual":"2026-02-12","kittingDelayDays":"44","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-16"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-25"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-27"},"charger":{"qty":"","date":"2026-02-16"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-51","name":"ContiTech SLP","customer":"ContiTech SLP","vehicleSerial":"10K 06","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2025-12-24","mrsActual":"2025-12-24","productionPlan":"2026-01-14","productionActual":"2026-02-11","validationPlan":"2026-01-26","validationActual":"2026-02-26","dispatchPlan":"2026-01","dispatchActual":"2026-02-28","dueDate":"2026-01-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-02-12","kittingPlan":"2025-12-30","kittingActual":"2026-02-11","kittingDelayDays":"43","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-06"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-25"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-27"},"charger":{"qty":"","date":"2026-02-16"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-52","name":"ContiTech SLP","customer":"ContiTech SLP","vehicleSerial":"10K 03","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"2026-01-20","mrsActual":"2026-01-21","productionPlan":"2026-01-29","productionActual":"","validationPlan":"2026-02-09","validationActual":"2026-02-26","dispatchPlan":"2026-01","dispatchActual":"2026-02-28","dueDate":"2026-01-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"2026-01-26","kittingActual":"2026-02-12","kittingDelayDays":"17","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-16"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-25"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-27"},"charger":{"qty":"","date":"2026-02-16"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-53","name":"Yokohama Dahej -2","customer":"Yokohama Dahej -2","vehicleSerial":"10K 13","amrType":"","buildType":"Production","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"2026-02-02","mrsActual":"2026-02-12","productionPlan":"2026-02-10","productionActual":"","validationPlan":"2026-02-25","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-28","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-11","kittingPlan":"2026-02-05","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-09"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-03-11"},"charger":{"qty":"","date":"2026-03-06"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-54","name":"ELECTROLUX Thailand-2","customer":"ELECTROLUX Thailand-2","vehicleSerial":"10K 14","amrType":"","buildType":"Production","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"2026-02-02","mrsActual":"2026-02-12","productionPlan":"2026-02-10","productionActual":"","validationPlan":"2026-02-25","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-28","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-11","kittingPlan":"2026-02-05","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-09"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-03-11"},"charger":{"qty":"","date":"2026-03-06"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-55","name":"Innovista Automation - Kolhapur-1","customer":"Innovista Automation - Kolhapur-1","vehicleSerial":"Lifter 1k 01","amrType":"","buildType":"Engineering","stage":"VALIDATION","jiraStatus":"Validation","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-13","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":"2026-01-27"},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-56","name":"Innovista Automation - Kolhapur-2","customer":"Innovista Automation - Kolhapur-2","vehicleSerial":"Lifter 1K 02","amrType":"","buildType":"Engineering","stage":"VEHICLE_BRINGUP","jiraStatus":"vehicle Bringup","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-16","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":"2026-02-27"},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-57","name":"Innovista Automation - Kolhapur-3","customer":"Innovista Automation - Kolhapur-3","vehicleSerial":"Lifter 1K 03","amrType":"","buildType":"Engineering","stage":"ELECTRONICS_ASSEMBLY","jiraStatus":"Electrical / Electronics Assembly","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-17","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-58","name":"Innovista Automation - Kolhapur-4","customer":"Innovista Automation - Kolhapur-4","vehicleSerial":"Lifter 1K 04","amrType":"","buildType":"Engineering","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-18","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-59","name":"Innovista Automation - Kolhapur-5","customer":"Innovista Automation - Kolhapur-5","vehicleSerial":"Lifter 1K 05","amrType":"","buildType":"Engineering","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-20","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-60","name":"Innovista Automation - Kolhapur-6","customer":"Innovista Automation - Kolhapur-6","vehicleSerial":"Lifter 1K 06","amrType":"","buildType":"Engineering","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-20","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-25","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-02-27"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-61","name":"BOSCH-Naganathapura","customer":"BOSCH-Naganathapura","vehicleSerial":"Lifter 500","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2025-12-20","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2025-12","dispatchActual":"2026-01-06","dueDate":"2026-01-05","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-62","name":"Schneider Electric-Attibele","customer":"Schneider Electric-Attibele","vehicleSerial":"Pivot","amrType":"","buildType":"Production","stage":"MECHANICAL_ASSEMBLY","jiraStatus":"Mechanical Assembly","priority":"low","mrsPlan":"","mrsActual":"","productionPlan":"2026-01-20","productionActual":"2026-02-26","validationPlan":"","validationActual":"","dispatchPlan":"2026-01","dispatchActual":"","dueDate":"2026-01-30","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"2026-01-09","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":"2026-01-27"},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-63","name":"Sanmina SEZ-Chennai","customer":"Sanmina SEZ-Chennai","vehicleSerial":"Pivot","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-27","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-20","reporter":"Aniruddha M S","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-67","name":"ArcelorMittal Nippon Steel India-1","customer":"ArcelorMittal Nippon Steel India-1","vehicleSerial":"10K 19","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-03-03","mrsActual":"","productionPlan":"2026-03-12","productionActual":"","validationPlan":"2026-02-20","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-17","reporter":"logesh.v","materialStatus":"Ordered","materialAvailability":"2026-03-20","kittingPlan":"2026-03-06","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-18"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"","date":"2026-03-20"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-20"},"charger":{"qty":"","date":"2026-03-12"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-68","name":"ArcelorMittal Nippon Steel India-2","customer":"ArcelorMittal Nippon Steel India-2","vehicleSerial":"10K 20","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-03-03","mrsActual":"","productionPlan":"2026-03-12","productionActual":"","validationPlan":"2026-03-20","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-17","reporter":"logesh.v","materialStatus":"Ordered","materialAvailability":"2026-03-20","kittingPlan":"2026-03-06","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-13"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2026-03-05"},"lidar":{"qty":"1","date":"2026-03-20"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-28"},"battery":{"qty":"","date":"2026-03-20"},"charger":{"qty":"","date":"2026-03-10"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-73","name":"Hindustan Unilever Limited - HUL","customer":"Hindustan Unilever Limited - HUL","vehicleSerial":"Lifter 500","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"low","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-11","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-13","reporter":"logesh.v","materialStatus":"","materialAvailability":"2026-03-25","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-74","name":"Schneider Electric-Dubai","customer":"Schneider Electric-Dubai","vehicleSerial":"PM 17","amrType":"","buildType":"Production","stage":"REJECTED","jiraStatus":"Rejected","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-24","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-04","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-23"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-15"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-75","name":"Siemens Aurangabad","customer":"Siemens Aurangabad","vehicleSerial":"PM 18","amrType":"","buildType":"Production","stage":"SUB_ASSY","jiraStatus":"Sub Assy","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-23","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-18","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-23"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-15"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-76","name":"HUL-Dapada POC","customer":"HUL-Dapada POC","vehicleSerial":"PM 13","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2025-12-08","mrsActual":"2025-12-08","productionPlan":"2025-12-22","productionActual":"2025-12-29","validationPlan":"2026-01-05","validationActual":"2026-01-30","dispatchPlan":"2026-01","dispatchActual":"2026-01-31","dueDate":"2026-01-10","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2026-02-05","kittingPlan":"2025-12-11","kittingActual":"2025-12-11","kittingDelayDays":"0","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-01-23"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-01-15"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-77","name":"Mahle Filters_ Manesar_ POC","customer":"Mahle Filters_ Manesar_ POC","vehicleSerial":"PM 23","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-10","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-13","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"2","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-78","name":"Britannia Industries","customer":"Britannia Industries","vehicleSerial":"XT Lite 21","amrType":"","buildType":"Production","stage":"ELECTRONICS_ASSEMBLY","jiraStatus":"Electrical / Electronics Assembly","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-21","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-17","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2026-01-31"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-79","name":"Daikin-Thailand","customer":"Daikin-Thailand","vehicleSerial":"10K 09","amrType":"","buildType":"Production","stage":"ELECTRONICS_ASSEMBLY","jiraStatus":"Electrical / Electronics Assembly","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-20","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-04","reporter":"logesh.v","materialStatus":"Ordered","materialAvailability":"2026-02-24","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-03"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-25"},"lidar":{"qty":"1","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-02-16"},"charger":{"qty":"","date":"2026-02-20"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-80","name":"Shoba-Dubai-1","customer":"Shoba-Dubai-1","vehicleSerial":"XT Lite 22","amrType":"","buildType":"Production","stage":"ELECTRONICS_ASSEMBLY","jiraStatus":"Electrical / Electronics Assembly","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-17","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-13","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2026-01-31"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-81","name":"Shoba-Dubai-2","customer":"Shoba-Dubai-2","vehicleSerial":"XT Lite 23","amrType":"","buildType":"Production","stage":"MECHANICAL_ASSEMBLY","jiraStatus":"Mechanical Assembly","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-18","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-13","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2026-01-31"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-82","name":"Shoba-Dubai-3","customer":"Shoba-Dubai-3","vehicleSerial":"XT Lite 24","amrType":"","buildType":"Production","stage":"MECHANICAL_ASSEMBLY","jiraStatus":"Mechanical Assembly","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-19","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-13","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"2025-12-01","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2025-12-01"},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":"2025-12-01"},"lidar":{"qty":"1","date":"2025-12-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2025-12-01"},"battery":{"qty":"","date":"2026-01-31"},"charger":{"qty":"","date":"2026-01-01"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-83","name":"Electrolux Thailand-3","customer":"Electrolux Thailand-3","vehicleSerial":"10K 21","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-03-10","mrsActual":"","productionPlan":"2026-03-17","productionActual":"","validationPlan":"2026-03-28","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-09","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"2026-03-13","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-84","name":"Electrolux Thailand-4","customer":"Electrolux Thailand-4","vehicleSerial":"10K 22","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"2026-03-10","mrsActual":"","productionPlan":"2026-03-17","productionActual":"","validationPlan":"2026-03-28","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-09","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"2026-03-13","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"1","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"1","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-85","name":"Brose-Alabama-1","customer":"Brose-Alabama-1","vehicleSerial":"Monofork 01","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-02","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-10","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-86","name":"Brose-Alabama-2","customer":"Brose-Alabama-2","vehicleSerial":"Monofork 02","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-03","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-10","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-87","name":"Brose-Alabama-3","customer":"Brose-Alabama-3","vehicleSerial":"Monofork 03","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-04","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-10","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-88","name":"Brose-Alabama-4","customer":"Brose-Alabama-4","vehicleSerial":"Monofork 04","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-05","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-10","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-90","name":"HUL Sumerpur","customer":"HUL Sumerpur","vehicleSerial":"Lite 33","amrType":"","buildType":"Production","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"2026-02-05","mrsActual":"2026-02-09","productionPlan":"2026-02-06","productionActual":"2026-02-09","validationPlan":"2026-02-09","validationActual":"2026-02-10","dispatchPlan":"2026-02","dispatchActual":"2026-02-12","dueDate":"2026-02-12","reporter":"Aniruddha M S","materialStatus":"","materialAvailability":"","kittingPlan":"2026-02-06","kittingActual":"2026-02-09","kittingDelayDays":"3","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-91","name":"10k-Buffer-1","customer":"10k-Buffer-1","vehicleSerial":"10K 23","amrType":"","buildType":"","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-20","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-28","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-92","name":"10k Buffer-2","customer":"10k Buffer-2","vehicleSerial":"10K 25","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-10","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-31","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-93","name":"10K Buffer-3","customer":"10K Buffer-3","vehicleSerial":"10k 24","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-10","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-31","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-94","name":"PM Buffer-1","customer":"PM Buffer-1","vehicleSerial":"PM 24","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-11","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"","dueDate":"2026-02-28","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-95","name":"PM Buffer-2","customer":"PM Buffer-2","vehicleSerial":"PM 25","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-09","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-02-28","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-96","name":"PM Buffer-3","customer":"PM Buffer-3","vehicleSerial":"PM 26","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-09","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-02-28","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-97","name":"Shoba-Dubai-4","customer":"Shoba-Dubai-4","vehicleSerial":"XT Lite 25","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-01","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-22","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-98","name":"Shoba-Dubai-5","customer":"Shoba-Dubai-5","vehicleSerial":"XT Lite 26","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-01","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-22","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-99","name":"Bosch Bidadi","customer":"Bosch Bidadi","vehicleSerial":"PM 27","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-03","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-29","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-100","name":"Bosch Bidadi","customer":"Bosch Bidadi","vehicleSerial":"","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-03","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-29","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-101","name":"HUL Haldia-1","customer":"HUL Haldia-1","vehicleSerial":"PM 21","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-26","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-17","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-102","name":"HUL Haldia-2","customer":"HUL Haldia-2","vehicleSerial":"PM 22","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-26","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-17","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-103","name":"Shobha-Dubai-1","customer":"Shobha-Dubai-1","vehicleSerial":"PM 28","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-27","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-24","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-104","name":"Shoba-Dubai-2","customer":"Shoba-Dubai-2","vehicleSerial":"PM 29","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-28","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-25","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-105","name":"Shoba-Dubai-3","customer":"Shoba-Dubai-3","vehicleSerial":"PM 30","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-30","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-26","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-106","name":"Shoba-Dubai-4","customer":"Shoba-Dubai-4","vehicleSerial":"PM 31","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-31","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-27","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-107","name":"Mexico Demo XT-lite","customer":"Mexico Demo XT-lite","vehicleSerial":"XT Lite 27","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-13","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-08","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-108","name":"Mexico Demo 10 K","customer":"Mexico Demo 10 K","vehicleSerial":"10K 26","amrType":"","buildType":"Production","stage":"PDI","jiraStatus":"PDI","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-13","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-12","reporter":"logesh.v","materialStatus":"Not yet ordered","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-109","name":"Ceat Halol Spare AMR","customer":"Ceat Halol Spare AMR","vehicleSerial":"Tug 72","amrType":"","buildType":"","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-23","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-06","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-110","name":"Bosch NNpura Replacement","customer":"Bosch NNpura Replacement","vehicleSerial":"XT lite 06","amrType":"","buildType":"","stage":"MRS_RAISED","jiraStatus":"MRS Raised","priority":"high","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-23","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-03-06","reporter":"logesh.v","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-111","name":"Chennai Expo/ L&T Vadodara","customer":"Chennai Expo/ L&T Vadodara","vehicleSerial":"10K 11","amrType":"","buildType":"","stage":"MECHANICAL_ASSEMBLY","jiraStatus":"Mechanical Assembly","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-02-19","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-03","dispatchActual":"","dueDate":"2026-02-28","reporter":"Aniruddha M S","materialStatus":"Ordered","materialAvailability":"2026-03-06","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":"2026-03-03"},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":"2026-02-20"},"lidar":{"qty":"","date":"2026-01-01"},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":"2026-02-05"},"battery":{"qty":"","date":"2026-03-06"},"charger":{"qty":"","date":"2026-02-25"},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-112","name":"Validation (Paul)","customer":"Validation (Paul)","vehicleSerial":"PM 11","amrType":"","buildType":"","stage":"DONE","jiraStatus":"Done","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2025-11-21","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-02","dispatchActual":"2026-02-27","dueDate":"2025-12-01","reporter":"Aniruddha M S","materialStatus":"completed","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-113","name":"Dana Anand-1","customer":"Dana Anand-1","vehicleSerial":"","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-10","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-30","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-114","name":"Dana Anand-2","customer":"Dana Anand-2","vehicleSerial":"","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-10","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-30","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-115","name":"SAFT Valdosta","customer":"SAFT Valdosta","vehicleSerial":"","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-17","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-09","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-116","name":"Yokohoma Dahej-7","customer":"Yokohoma Dahej-7","vehicleSerial":"10K 27","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-14","productionActual":"2026-04-13","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-03-04","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-117","name":"Yokohoma Dahej-9","customer":"Yokohoma Dahej-9","vehicleSerial":"10K 28","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-14","productionActual":"2026-04-13","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-03-06","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-118","name":"Yokohoma Dahej-8","customer":"Yokohoma Dahej-8","vehicleSerial":"10K 29","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-14","productionActual":"2026-04-13","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-03-05","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-119","name":"Yokohoma Dahej-10","customer":"Yokohoma Dahej-10","vehicleSerial":"10K 30","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-14","productionActual":"2026-04-13","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-03-07","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-120","name":"Turbo energy","customer":"Turbo energy","vehicleSerial":"10K 31","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-14","productionActual":"2026-04-13","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-08","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-121","name":"Bekaert","customer":"Bekaert","vehicleSerial":"","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-22","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-20","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-122","name":"Modex","customer":"Modex","vehicleSerial":"","amrType":"","buildType":"Engineering","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-04-23","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-05","dispatchActual":"","dueDate":"2026-05-11","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}},{"key":"MOM-123","name":"Good year haryana","customer":"Good year haryana","vehicleSerial":"10K 32","amrType":"","buildType":"Production","stage":"TO_DO","jiraStatus":"To Do","priority":"medium","mrsPlan":"","mrsActual":"","productionPlan":"2026-03-25","productionActual":"","validationPlan":"","validationActual":"","dispatchPlan":"2026-04","dispatchActual":"","dueDate":"2026-04-29","reporter":"logesh.v","materialStatus":"","materialAvailability":"","kittingPlan":"","kittingActual":"","kittingDelayDays":"","notes":"","components":{"chassis":{"qty":"","date":""},"panel":{"qty":"","date":""},"cpBoard":{"qty":"","date":""},"hubMotor":{"qty":"","date":""},"lidar":{"qty":"","date":""},"wiringHarness":{"qty":"","date":""},"autoUnhitch":{"qty":"","date":""},"electronicsBoards":{"qty":"","date":""},"battery":{"qty":"","date":""},"charger":{"qty":"","date":""},"chargerBay":{"qty":"","date":""}}}];
+// Load builds — if saved data has no amrType populated, discard it and use SEED
+let _savedBuilds = JSON.parse(localStorage.getItem('amr-v6-builds')||'null');
+if (_savedBuilds && !_savedBuilds.some(b => b.amrType)) {
+  _savedBuilds = null; // corrupt/old data, fall back to SEED
+  localStorage.removeItem('amr-v6-builds');
+  localStorage.removeItem('amr-v6-mp-crit'); // clear stale crit map too
+}
+let builds = _savedBuilds || JSON.parse(JSON.stringify(SEED));
+let cFilter='all', importBuf=null;
+
+const gs   = id => STAGES.find(s=>s.id===id) || {id,label:id,short:id,color:'#5a6678',prog:0};
+const save = () => localStorage.setItem('amr-v6-builds', JSON.stringify(builds));
+const fmt  = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+const today = () => { const d=new Date(); d.setHours(0,0,0,0); return d; };
+const isLate = d => d && new Date(d+'T00:00:00') < today();
+
+function fb() {
+  const q  = (document.getElementById('search').value||'').toLowerCase();
+  const at = document.getElementById('amr-filter').value;
+  const bt = document.getElementById('btype-filter').value;
+  const mt = document.getElementById('mat-filter').value;
+  return builds.filter(b => {
+    if (cFilter!=='all' && b.stage!==cFilter) return false;
+    if (at && b.amrType!==at) return false;
+    if (bt && b.buildType!==bt) return false;
+    if (mt && b.materialStatus!==mt) return false;
+    if (q && ![b.name,b.customer,b.vehicleSerial,b.amrType,b.key].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderAll() { renderSidebar(); renderList(); }
+
+function renderSidebar() {
+  document.getElementById('cnt-all').textContent = builds.length;
+  STAGES.forEach(s=>{const el=document.getElementById('cnt-'+s.id);if(el)el.textContent=builds.filter(b=>b.stage===s.id).length;});
+}
+
+function renderList() {
+  const list=fb();
+  if(!list.length){document.getElementById('lv').innerHTML='<div class="empty" style="padding:60px">No builds match filters</div>';return;}
+  const thead=`<div style="display:grid;grid-template-columns:1fr 120px 110px 190px 80px 80px;gap:12px;padding:6px 14px;margin-bottom:4px">
+    ${['Build','Stage','Progress','Material','Dispatch','Notes'].map(h=>`<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase">${h}</div>`).join('')}
+  </div>`;
+  document.getElementById('lv').innerHTML=thead+list.map(b=>{
+    const stage=gs(b.stage);
+    const prog=b.stage==='REJECTED'?0:(stage.prog||0);
+    const ds=b.dispatchPlan?b.dispatchPlan+'-01':b.dueDate;
+    const dStr=ds?new Date(ds+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}):'—';
+    const late=ds&&isLate(ds)&&!['DONE','REJECTED'].includes(b.stage);
+    return `<div class="trow" onclick="openDetail('${b.key}')"><div class="tinner" style="grid-template-columns:1fr 120px 110px 190px 80px 80px">
+      <div><div class="tn">${b.name}</div><div class="tid">${b.key} · ${b.amrType||'—'} · SN:${b.vehicleSerial||'—'}</div></div>
+      <div><div class="tsbdg" style="color:${stage.color};background:${stage.color}18;border:1px solid ${stage.color}40">${stage.short}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pbar-wrap" style="flex:1"><div class="pbar-fill" style="width:${prog}%;background:${stage.color}"></div></div>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);width:28px;text-align:right">${prog}%</span>
+      </div>
+      <div>
+        <div class="tmat">
+          ${(()=>{
+            const {gating, missing, status} = calcMatStatus(b);
+            const fmtD2 = d => new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+            const daysR2 = d => Math.ceil((d - today()) / 86400000);
+            if (status==='clear') {
+              return `<div class="tmat-dot" style="background:var(--grn)"></div>
+                <div class="tmat-info">
+                  <div class="tmat-status" style="color:var(--grn)">Clear to build</div>
+                </div>`;
+            } else if (status==='missing') {
+              return `<div class="tmat-dot" style="background:var(--mut)"></div>
+                <div class="tmat-info">
+                  <div class="tmat-status" style="color:var(--mut)">Missing dates</div>
+                  <div class="tmat-date">${missing.slice(0,2).join(', ')}${missing.length>2?' +'+( missing.length-2)+' more':''}</div>
+                </div>`;
+            } else {
+              const g = gating[0];
+              return `<div class="tmat-dot" style="background:var(--red)"></div>
+                <div class="tmat-info">
+                  <div class="tmat-status" style="color:var(--red)">Gated · ${fmtD2(g.dateStr)}</div>
+                  <div class="tmat-date">${g.label}${gating.length>1?' +'+( gating.length-1)+' more':''} · ${daysR2(g.date)}d</div>
+                </div>`;
+            }
+          })()}
+        </div>
+      </div>
+      <div class="tdue ${late?'late':''}">${late?'⚠ ':''}${dStr}</div>
+      <div onclick="event.stopPropagation()">
+        <button class="notes-btn ${b.notes?'notes-btn-has':''}" onclick="openNotes('${b.key}')" title="${b.notes?'Edit notes':'Add notes'}">
+          ${b.notes ? '📝' : '＋'} Notes
+        </button>
+      </div>
+    </div></div>`;
+  }).join('');
+}
+
+function openDetail(key) {
+  const b=builds.find(x=>x.key===key); if(!b) return;
+  const stage=gs(b.stage);
+  const mc=matCfg(b.materialStatus);
+
+  document.getElementById('d-title').textContent=b.name;
+  document.getElementById('d-key').textContent=b.key;
+  document.getElementById('d-badges').innerHTML=
+    `<span class="badge">${b.amrType||'—'}</span>`+
+    (b.buildType?`<span class="badge badge-eng">${b.buildType}</span>`:'')+
+    (b.stage==='REJECTED'?`<span class="badge badge-rej">Rejected</span>`:'')+
+    (b.vehicleSerial?`<span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--mut)">S/N: ${b.vehicleSerial}</span>`:'');
+
+  // Progress rail
+  const ci=PROG_IDS.indexOf(b.stage);
+  const progStages=STAGES.filter(s=>s.id!=='REJECTED');
+  document.getElementById('d-plabels').innerHTML=progStages.map(s=>`<div class="prog-lbl">${s.short}</div>`).join('');
+  document.getElementById('d-psteps').innerHTML=progStages.map((s,i)=>{
+    const done=i<ci,cur=s.id===b.stage;
+    return `<div class="prog-step" style="background:${done||cur?s.color:'var(--bdr)'};opacity:${done?0.4:cur?1:0.2}"></div>`;
+  }).join('');
+
+  // Expected Dispatch Status
+  const dispRaw = b.dispatchActual || (b.dispatchPlan ? b.dispatchPlan + '-01' : null);
+  if (dispRaw) {
+    const dispDate = new Date(dispRaw + 'T00:00:00');
+    const todayD   = today();
+    const diffMs   = dispDate - todayD;
+    const diffDays = Math.round(diffMs / 86400000);
+    const dispLabel = dispDate.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    const isDelayed = diffDays < 0;
+    const statusTxt = isDelayed
+      ? `Delayed by ${Math.abs(diffDays)} day${Math.abs(diffDays)===1?'':'s'}`
+      : `${diffDays} day${diffDays===1?'':'s'} remaining`;
+    const statusColor = isDelayed ? 'var(--red)' : 'var(--grn)';
+    const bgColor     = isDelayed ? 'rgba(255,77,109,.06)' : 'rgba(0,229,160,.06)';
+    const borderColor = isDelayed ? 'rgba(255,77,109,.3)' : 'rgba(0,229,160,.25)';
+    document.getElementById('d-dispatch-status').innerHTML = `
+      <div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;margin-bottom:4px">Expected Dispatch Date</div>
+          <div style="font-size:14px;font-weight:700;color:var(--txt)">${dispLabel}</div>
+        </div>
+        <div style="font-size:13px;font-weight:800;color:${statusColor};text-align:right;white-space:nowrap">${statusTxt}</div>
+      </div>`;
+  } else {
+    document.getElementById('d-dispatch-status').innerHTML = `
+      <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);text-transform:uppercase;margin-bottom:4px">Expected Dispatch Date</div>
+          <div style="font-size:13px;font-weight:600;color:var(--mut)">Not set</div>
+        </div>
+      </div>`;
+  }
+
+  // Material overview
+  const kitDelay=b.kittingDelayDays?`+${b.kittingDelayDays}d delay`:null;
+  const kitLate=b.kittingPlan&&!b.kittingActual&&isLate(b.kittingPlan);
+  const availLate=b.materialAvailability&&isLate(b.materialAvailability)&&b.materialStatus!=='completed';
+  document.getElementById('d-material-overview').innerHTML=`
+    <div class="mat-section ${mc.cls}">
+      <div class="mat-header">
+        <div class="mat-status-badge">
+          <div class="mat-status-dot" style="background:${mc.color}"></div>
+          <div class="mat-status-label" style="color:${mc.color}">${mc.label}</div>
+        </div>
+        ${kitDelay?`<span style="font-size:11px;font-weight:700;color:var(--org)">${kitDelay}</span>`:''}
+      </div>
+      <div class="mat-grid">
+        <div class="mf"><div class="mflbl">Material Availability</div>
+          <div class="mfval ${availLate?'late':b.materialStatus==='completed'?'ok':''}">${b.materialAvailability?fmt(b.materialAvailability):'—'}</div></div>
+        <div class="mf"><div class="mflbl">Kitting Plan</div>
+          <div class="mfval ${kitLate?'late':''}">${b.kittingPlan?fmt(b.kittingPlan):'—'}</div></div>
+        <div class="mf"><div class="mflbl">Kitting Actual</div>
+          <div class="mfval ${b.kittingActual?'ok':''}">${b.kittingActual?fmt(b.kittingActual):'Pending'}</div></div>
+      </div>
+    </div>`;
+
+  // Component tracking table
+  const comps=b.components||{};
+  const today_d=today();
+  const compRows=COMPONENTS.map(c=>{
+    const v=comps[c.key]||{};
+    const hasDate=!!v.date, hasQty=!!v.qty;
+    const arrived=hasDate&&new Date(v.date+'T00:00:00')<=today_d;
+    const pending=hasDate&&!arrived;
+    const noData=!hasDate&&!hasQty;
+    let statusDot='#5a6678', statusTxt='—', dateCls='';
+    if(noData){ statusDot='#5a6678'; statusTxt='No data'; }
+    else if(arrived){ statusDot='#00e5a0'; statusTxt='In stock'; dateCls='comp-arrived'; }
+    else if(pending){ statusDot='#f5c518'; statusTxt='Pending'; dateCls='comp-pending'; }
+    return `<tr>
+      <td class="comp-name">${c.label}</td>
+      <td class="comp-qty">${v.qty||'—'}</td>
+      <td class="comp-date ${dateCls}">${v.date?fmt(v.date):'—'}</td>
+      <td><span class="comp-status-dot" style="background:${statusDot}"></span><span class="comp-status-txt" style="color:${statusDot}">${noData?'—':statusTxt}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('d-components').innerHTML=`
+    <table class="comp-table">
+      <thead><tr>
+        <th>Component</th><th>Qty</th><th>Expected Date</th><th>Status</th>
+      </tr></thead>
+      <tbody>${compRows}</tbody>
+    </table>`;
+
+  // Meta
+  document.getElementById('d-meta').innerHTML=
+    `<div class="df"><div class="dlbl">Customer</div><div class="dval">${b.customer||'—'}</div></div>`+
+    `<div class="df"><div class="dlbl">Stage</div><div class="dval" style="color:${stage.color}">${stage.label}</div></div>`+
+    `<div class="df"><div class="dlbl">Jira Status</div><div class="dval">${b.jiraStatus||'—'}</div></div>`+
+    `<div class="df"><div class="dlbl">Priority</div><div class="dval"><span class="cpri pri-${b.priority}">${b.priority}</span></div></div>`+
+    `<div class="df"><div class="dlbl">Dispatch Plan</div><div class="dval">${b.dispatchPlan||'—'}</div></div>`+
+    `<div class="df"><div class="dlbl">Dispatch Actual</div><div class="dval">${b.dispatchActual||'Pending'}</div></div>`;
+
+  // Load notes
+  const notesEl = document.getElementById('d-notes-input');
+  notesEl.value = b.notes || '';
+  notesEl.dataset.buildKey = b.key;
+  document.getElementById('d-notes-saved').textContent = '';
+
+  document.getElementById('detail-ov').classList.add('open');
+}
+function closeDetail(){document.getElementById('detail-ov').classList.remove('open');}
+
+// CSV Import
+document.getElementById('csv-input').addEventListener('change',e=>{
+  if(e.target.files[0]){document.getElementById('upload-ov').classList.add('open');handleCSVFile(e.target.files[0]);}
+  e.target.value='';
+});
+function handleDrop(e){
+  e.preventDefault();document.getElementById('drop-zone').classList.remove('drag');
+  if(e.dataTransfer.files[0])handleCSVFile(e.dataTransfer.files[0]);
+}
+function handleCSVFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const parsed=parseJiraCSV(ev.target.result);
+      importBuf=parsed;
+      document.getElementById('upload-preview').style.display='block';
+      document.getElementById('upload-stats').innerHTML=
+        `Parsed <strong style="color:var(--txt)">${parsed.length} builds</strong> from <strong style="color:var(--txt)">${file.name}</strong><br>`+
+        `Current: ${builds.length} &rarr; After import: ${parsed.length}`;
+    }catch(err){toast('CSV error: '+err.message,'err');closeUpload();}
+  };
+  reader.readAsText(file);
+}
+function parseJiraCSV(text){
+  const parseRow=line=>{
+    const res=[];let v='',q=false;
+    for(let i=0;i<=line.length;i++){
+      const c=line[i];
+      if(c==='"'){if(q&&line[i+1]==='"'){v+='"';i++;}else q=!q;}
+      else if((c===','||i===line.length)&&!q){res.push(v.trim());v='';}
+      else if(c!==undefined)v+=c;
+    }
+    return res;
+  };
+  const lines=[];let cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(c==='"'){
+      if(inQ&&text[i+1]==='"'){cur+='"';i++;}  // escaped quote inside field
+      else{inQ=!inQ; cur+=c;}                  // keep the quote char in cur
+    }
+    else if(c==='\n'&&!inQ){lines.push(cur);cur='';}
+    else if(c!=='\r')cur+=c;
+  }
+  if(cur)lines.push(cur);
+  const hdr=parseRow(lines[0]);
+  const col=(row,k)=>(row[hdr.indexOf(k)]||'').trim();
+  // Multi-key lookup — returns first non-empty value across candidate column names
+  const colAny=(row,...keys)=>{for(const k of keys){const v=col(row,k);if(v)return v;}return'';};
+  const fmtD=d=>{
+    if(!d||!d.trim())return'';
+    const s=d.trim().split(' ')[0]; // strip time portion
+    // dd/Mon/yy  e.g. "10/Oct/25" or "10/Oct/2025"
+    const months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+    const dmyMon=/^(\d{1,2})\/([A-Za-z]{3})\/(\d{2,4})$/;
+    const mDmy=s.match(dmyMon);
+    if(mDmy){
+      const[,day,mon,yr]=mDmy;
+      const mm=months[mon]||months[mon.charAt(0).toUpperCase()+mon.slice(1).toLowerCase()]||'01';
+      const year=yr.length===2?'20'+yr:yr;
+      return`${year}-${mm}-${day.padStart(2,'0')}`;
+    }
+    // yyyy-mm or yyyy-mm-dd (already ISO)
+    if(s.match(/^\d{4}-\d{2}(-\d{2})?$/))return s;
+    // MM/dd/yy or MM/dd/yyyy fallback
+    const p=s.split('/');
+    if(p.length===3){let[m,dy,yr]=p;if(yr.length===2)yr='20'+yr;return`${yr}-${m.padStart(2,'0')}-${dy.padStart(2,'0')}`;}
+    return'';
+  };
+  const priMap=p=>{p=(p||'').toLowerCase();return p.includes('high')||p==='critical'?'high':p==='low'||p==='lowest'?'low':'medium';};
+  return lines.slice(1).map(line=>{
+    const r=parseRow(line);if(!r[0])return null;
+    const status=col(r,'Status'),state=col(r,'Custom field (State of Build)');
+    const stage=state==='Dispatched'?'DISPATCH':(STATUS_MAP[status]||'TO_DO');
+    const summary=col(r,'Summary');
+    return {
+      key:col(r,'Issue key'),name:summary,
+      customer:summary.replace(/\s*-\s*\d+$/,'').trim(),
+      vehicleSerial:col(r,'Custom field (Vehicle Serial No)'),
+      amrType:colAny(r,
+        'Custom field (Vehicle/ AMR Type)',
+        'Custom field (Vehicle / AMR Type)',
+        'Custom field (Vehicle/AMR Type)',
+        'Custom field (Product Name)'
+      ),
+      buildType:col(r,'Custom field (Type of Build- Engineering/ Production )'),
+      stage,jiraStatus:status,priority:priMap(col(r,'Priority')),
+      dispatchPlan:col(r,'Custom field (Dispatch month- Plan )'),
+      dispatchActual:fmtD(col(r,'Custom field (Actual Dispatch Date )'),),
+      dueDate:fmtD(col(r,'Due date')),reporter:col(r,'Reporter'),
+      materialStatus:col(r,'Custom field (Material Status)'),
+      materialAvailability:fmtD(col(r,'Custom field (Material Availability)')),
+      kittingPlan:fmtD(col(r,'Custom field ( Kitting Plan )')),
+      kittingActual:fmtD(col(r,'Custom field (Kitting Actual)')),
+      kittingDelayDays:col(r,'Custom field (Number of days between Material kitting- plan vs actual)'),
+      components:{
+        chassis:          {qty:'',date:fmtD(col(r,'Custom field (Chassis)'))},
+        panel:            {qty:'',date:fmtD(col(r,'Custom field (Panel )'))},
+        cpBoard:          {qty:col(r,'Custom field (CP board)'),date:fmtD(col(r,'Custom field (CP board )'))},
+        hubMotor:         {qty:'',date:fmtD(col(r,'Custom field (Hub Motor/Drive unit)'))},
+        lidar:            {qty:col(r,'Custom field (Lidar)'),date:fmtD(col(r,'Custom field (Lidar date)'))},
+        wiringHarness:    {qty:col(r,'Custom field (Wiring harness Kit)'),date:fmtD(col(r,'Custom field (Wiring harness Date)'))},
+        autoUnhitch:      {qty:'',date:''},
+        electronicsBoards:{qty:'',date:fmtD(col(r,'Custom field (Electronics Boards)'))},
+        battery:          {qty:'',date:fmtD(col(r,'Custom field (Battery)'))},
+        charger:          {qty:'',date:fmtD(col(r,'Custom field (Charger)'))},
+        chargerBay:       {qty:'',date:''},
+      },
+    };
+  }).filter(Boolean).filter(b=>b.key);
+}
+function applyImport(){
+  if(!importBuf)return;
+  builds=importBuf;save();populateAMRFilter();closeUpload();renderAll();initMpPanel();buildFcLeadTimeGrid();renderForecast();
+  toast(`Imported ${builds.length} builds`,'ok');importBuf=null;
+}
+function closeUpload(){
+  document.getElementById('upload-ov').classList.remove('open');
+  document.getElementById('upload-preview').style.display='none';
+  importBuf=null;
+}
+function exportCSV(){
+  const h=['key','name','customer','amrType','vehicleSerial','buildType','stage','jiraStatus','priority',
+    'dispatchPlan','dispatchActual','dueDate','materialStatus','materialAvailability',
+    'kittingPlan','kittingActual','kittingDelayDays'];
+  const rows=[h.join(','),...builds.map(b=>h.map(k=>JSON.stringify(b[k]||'')).join(','))];
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+  a.download='amr-builds.csv';a.click();toast('Exported CSV','ok');
+}
+function resetToSeed(){
+  if(!confirm('Reset to original Jira data?'))return;
+  builds=JSON.parse(JSON.stringify(SEED));save();populateAMRFilter();renderAll();initMpPanel();buildFcLeadTimeGrid();renderForecast();
+  toast('Reset to original data','ok');
+}
+function filterStage(stage,el){
+  cFilter=stage;document.querySelectorAll('.sf').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');renderAll();
+}
+function populateAMRFilter(){
+  const types=[...new Set(builds.map(b=>b.amrType).filter(Boolean))].sort();
+  document.getElementById('amr-filter').innerHTML='<option value="">All AMR Types</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+// ─── Notes ────────────────────────────────────────────────────────────────────
+let _notesKey = null; // build key currently being edited in the quick modal
+
+function openNotesSummary() {
+  // Group builds with notes by AMR type
+  const withNotes = builds.filter(b => b.notes && b.notes.trim());
+  const byAmr = {};
+  withNotes.forEach(b => {
+    const amr = b.amrType || 'Unknown';
+    if (!byAmr[amr]) byAmr[amr] = [];
+    byAmr[amr].push(b);
+  });
+
+  const total = withNotes.length;
+  document.getElementById('nsummary-sub').textContent =
+    total ? `${total} build${total!==1?'s':''} with notes · ${Object.keys(byAmr).length} AMR type${Object.keys(byAmr).length!==1?'s':''}` : 'No notes recorded yet';
+
+  if (!total) {
+    document.getElementById('nsummary-body').innerHTML =
+      `<div style="color:var(--mut);font-size:12px;text-align:center;padding:32px 0">No notes have been added to any build yet.</div>`;
+  } else {
+    const stageColor = s => (STAGES.find(x=>x.id===s)||{}).color||'var(--mut)';
+    const stageShort = s => (STAGES.find(x=>x.id===s)||{}).short||s;
+
+    document.getElementById('nsummary-body').innerHTML = Object.entries(byAmr)
+      .sort(([a],[b_]) => a.localeCompare(b_))
+      .map(([amr, bs]) => `
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--acc);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">${amr} <span style="font-weight:400;color:var(--mut)">(${bs.length})</span></div>
+          ${bs.map(b => `
+            <div style="margin-bottom:10px;cursor:pointer" onclick="closeNotesSummary();openDetail('${b.key}')">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                <span style="font-size:11px;font-weight:700;color:var(--txt)">${b.name}</span>
+                <span style="font-size:9px;color:var(--mut);font-family:'Space Mono',monospace">${b.key}</span>
+                <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;color:${stageColor(b.stage)};background:${stageColor(b.stage)}18;border:1px solid ${stageColor(b.stage)}40">${stageShort(b.stage)}</span>
+              </div>
+              <div style="font-size:11px;color:var(--txt);line-height:1.6;white-space:pre-wrap;background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:9px 12px">${b.notes.trim()}</div>
+            </div>`).join('')}
+        </div>`).join('');
+  }
+
+  document.getElementById('nsummary-ov').classList.add('open');
+}
+
+function closeNotesSummary() {
+  document.getElementById('nsummary-ov').classList.remove('open');
+}
+
+function copyNotesSummary() {
+  const withNotes = builds.filter(b => b.notes && b.notes.trim());
+  if (!withNotes.length) return;
+
+  const byAmr = {};
+  withNotes.forEach(b => {
+    const amr = b.amrType || 'Unknown';
+    if (!byAmr[amr]) byAmr[amr] = [];
+    byAmr[amr].push(b);
+  });
+
+  const stageShort = s => (STAGES.find(x=>x.id===s)||{}).short||s;
+  const date = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  const lines = [`*AMR Build Notes — ${date}*`, ''];
+
+  Object.entries(byAmr).sort(([a],[b_])=>a.localeCompare(b_)).forEach(([amr, bs]) => {
+    lines.push(`*${amr}*`);
+    lines.push('─'.repeat(40));
+    bs.forEach(b => {
+      lines.push(`• ${b.name} (${b.key}) [${stageShort(b.stage)}]`);
+      b.notes.trim().split('\n').forEach(l => lines.push(`  ${l}`));
+      lines.push('');
+    });
+  });
+
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('nsummary-copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--grn)';
+    btn.style.borderColor = 'var(--grn)';
+    setTimeout(() => { btn.textContent = '⎘ Copy All'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
+function openNotes(key) {
+  const b = builds.find(x => x.key === key);
+  if (!b) return;
+  _notesKey = key;
+  document.getElementById('notes-title').textContent = b.name;
+  document.getElementById('notes-sub').textContent   = b.key + (b.amrType ? ' · ' + b.amrType : '');
+  document.getElementById('notes-input').value       = b.notes || '';
+  document.getElementById('notes-saved').textContent = '';
+  document.getElementById('notes-ov').style.display  = 'flex';
+  setTimeout(() => document.getElementById('notes-input').focus(), 80);
+}
+
+function closeNotes() {
+  document.getElementById('notes-ov').style.display = 'none';
+  _notesKey = null;
+  renderList(); // refresh list so Notes button state updates
+}
+
+function autoSaveNote(textarea) {
+  const key = textarea.id === 'notes-input' ? _notesKey : textarea.dataset.buildKey;
+  if (!key) return;
+  const b = builds.find(x => x.key === key);
+  if (!b) return;
+  b.notes = textarea.value;
+  save();
+  const savedEl = textarea.id === 'notes-input'
+    ? document.getElementById('notes-saved')
+    : document.getElementById('d-notes-saved');
+  if (savedEl) { savedEl.textContent = 'Saved'; setTimeout(() => { savedEl.textContent = ''; }, 1500); }
+}
+
+function toast(msg,type='inf'){
+  const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;
+  document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),3500);
+}
+
+// ─── Material Planning Panel ──────────────────────────────────────────────────
+const MP_PARTS = [
+  {key:'panel',             label:'Panel'},
+  {key:'cpBoard',           label:'CP Board'},
+  {key:'hubMotor',          label:'Hub Motor / Drive Unit'},
+  {key:'lidar',             label:'Lidar'},
+  {key:'wiringHarness',     label:'Wiring Harness'},
+  {key:'autoUnhitch',       label:'Auto Unhitch'},
+  {key:'electronicsBoards', label:'Electronics Boards'},
+  {key:'battery',           label:'Battery'},
+  {key:'charger',           label:'Charger'},
+  {key:'chargerBay',        label:'Charger Bay'},
+];
+
+const MP_EXCLUDED  = new Set(['TO_DO','DONE','REJECTED','DISPATCH']);
+
+// Computed dynamically so it updates after CSV import
+function getAmrTypes() {
+  return [...new Set(builds.map(b=>b.amrType).filter(Boolean))].sort();
+}
+
+let mpCriticality = JSON.parse(localStorage.getItem('amr-v6-mp-crit')||'null') || {};
+
+function ensureMpCriticality() {
+  // Add any AMR types or parts not yet in the saved criticality map
+  getAmrTypes().forEach(a => {
+    if (!mpCriticality[a]) mpCriticality[a] = {};
+    MP_PARTS.forEach(p => {
+      if (mpCriticality[a][p.key] === undefined) mpCriticality[a][p.key] = true;
+    });
+  });
+}
+
+function saveMpCrit() { localStorage.setItem('amr-v6-mp-crit', JSON.stringify(mpCriticality)); }
+
+function switchPageTab(tab) {
+  ['prod','mat','forecast'].forEach(t => {
+    document.getElementById('pane-'+t).style.display = tab===t ? '' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', tab===t);
+  });
+  document.getElementById('main-layout').classList.toggle('no-sidebar', tab !== 'prod');
+  if (tab === 'mat') { buildMpGrid(); buildMpTable(); }
+  if (tab === 'forecast') renderForecast();
+}
+
+function buildMpGrid() {
+  ensureMpCriticality();
+  const grid = document.getElementById('mp-grid');
+  const cols  = getAmrTypes().length;
+  const shortName = t => t.replace('Sherpa ','');
+
+  // Set columns inline — CSS repeat() cannot use custom properties
+  grid.style.gridTemplateColumns = `150px repeat(${cols}, minmax(68px, 1fr))`;
+
+  let html = `<div class="mp-col-hdr" style="text-align:left;padding-left:10px">Part</div>`;
+  getAmrTypes().forEach(t => { html += `<div class="mp-col-hdr">${shortName(t)}</div>`; });
+
+  MP_PARTS.forEach(p => {
+    html += `<div class="mp-row-lbl">${p.label}</div>`;
+    getAmrTypes().forEach(a => {
+      const checked = mpCriticality[a]?.[p.key] !== false;
+      html += `<div class="mp-cell">
+        <input type="checkbox" class="mp-cb" data-amr="${a}" data-part="${p.key}"
+          ${checked ? 'checked' : ''} onchange="mpToggle(this)">
+      </div>`;
+    });
+  });
+  grid.innerHTML = html;
+}
+
+function mpToggle(cb) {
+  const {amr, part} = cb.dataset;
+  if (!mpCriticality[amr]) mpCriticality[amr] = {};
+  mpCriticality[amr][part] = cb.checked;
+  saveMpCrit();
+  buildMpTable();
+}
+
+// ── Shared material status evaluator (used by both production list & material planning table) ──
+function calcMatStatus(b) {
+  const todayD = today();
+  const critMap  = mpCriticality[b.amrType||''] || {};
+  const comps    = b.components || {};
+  // Only check parts that are marked critical for this AMR type
+  const critParts = MP_PARTS.filter(p => critMap[p.key] !== false);
+  let gating = [], missing = [];
+  critParts.forEach(p => {
+    const dateStr = (comps[p.key]||{}).date || '';
+    if (!dateStr) {
+      missing.push(p.label);
+    } else {
+      const d = new Date(dateStr+'T00:00:00');
+      if (d > todayD) gating.push({label:p.label, date:d, dateStr});
+    }
+  });
+  gating.sort((a,b) => b.date - a.date); // latest first
+  const status = gating.length>0 ? 'gating' : missing.length>0 ? 'missing' : 'clear';
+  return {gating, missing, status};
+}
+
+function buildMpTable() {
+  const activeBuild = builds.filter(b => !MP_EXCLUDED.has(b.stage));
+
+  const rows = activeBuild.map(b => {
+    const {gating, missing, status} = calcMatStatus(b);
+    return {b, gating, missing, status};
+  });
+
+  const gatingRows  = rows.filter(r=>r.status==='gating').sort((a,b)=>b.gating[0].date-a.gating[0].date);
+  const missingRows = rows.filter(r=>r.status==='missing');
+  const clearRows   = rows.filter(r=>r.status==='clear');
+
+  const badge = `— ${gatingRows.length} gated · ${missingRows.length} missing dates · ${clearRows.length} clear`;
+  document.getElementById('mp-summary-badge').textContent = activeBuild.length ? badge : '';
+
+  if (!activeBuild.length) {
+    document.getElementById('mp-table-wrap').innerHTML = '<div style="color:var(--mut);font-size:12px;padding:8px 0">No active builds.</div>';
+    return;
+  }
+
+  const fmtD  = d => new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+  const daysR = d => Math.ceil((d - today()) / 86400000);
+
+  const renderRow = r => {
+    const stage = gs(r.b.stage);
+    let statusCell;
+    if (r.status==='clear') {
+      statusCell = `<td class="mp-clear">✓ Clear to build</td>`;
+    } else if (r.status==='missing') {
+      statusCell = `<td><div class="mp-missing">Missing dates</div>
+        <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">
+          ${r.missing.map(m=>`<span style="font-size:9px;background:rgba(90,102,120,.2);padding:2px 6px;border-radius:3px;color:var(--mut)">${m}</span>`).join('')}
+        </div></td>`;
+    } else {
+      statusCell = `<td>${r.gating.map(g=>`<div class="mp-gate-item">
+          <span class="mp-gate-name">${g.label}</span>
+          <span class="mp-gate-date">${fmtD(g.dateStr)}</span>
+          <span class="mp-gate-days">(${daysR(g.date)}d)</span>
+        </div>`).join('')}</td>`;
+    }
+    return `<tr onclick="openDetail('${r.b.key}')">
+      <td><div class="mp-build">${r.b.name}</div><div class="mp-sub">${r.b.key} · ${r.b.vehicleSerial||'—'}</div></td>
+      <td><span class="mp-stage-bdg" style="color:${stage.color};background:${stage.color}18;border:1px solid ${stage.color}40">${stage.short}</span></td>
+      <td style="font-size:10px;color:var(--mut);white-space:nowrap">${r.b.amrType||'—'}</td>
+      ${statusCell}
+    </tr>`;
+  };
+
+  const secRow = (icon, label, count, color) =>
+    `<tr class="mp-section-row"><td colspan="4"><span style="color:${color}">${icon}  ${label}</span><span style="color:var(--mut);margin-left:8px;font-weight:400">${count} build${count===1?'':'s'}</span></td></tr>`;
+
+  let t = `<table class="mp-table"><thead><tr>
+    <th>Build</th><th>Stage</th><th>AMR Type</th><th>Material Status</th>
+  </tr></thead><tbody>`;
+  if (gatingRows.length)  t += secRow('🔴','Gated by material', gatingRows.length, 'var(--red)')  + gatingRows.map(renderRow).join('');
+  if (missingRows.length) t += secRow('⬜','Missing dates',      missingRows.length,'var(--mut)')  + missingRows.map(renderRow).join('');
+  if (clearRows.length)   t += secRow('🟢','Clear to build',    clearRows.length,  'var(--grn)')  + clearRows.map(renderRow).join('');
+  t += '</tbody></table>';
+  document.getElementById('mp-table-wrap').innerHTML = `<div class="mp-table-scroll">${t}</div>`;
+}
+
+function initMpPanel() {
+  ensureMpCriticality();
+  buildMpGrid();
+  buildMpTable();
+}
+
+// ─── Forecast ────────────────────────────────────────────────────────────────
+const FC_KEY = 'amr-v6-fc-leadtimes';
+
+function loadLeadTimes() {
+  try { return JSON.parse(localStorage.getItem(FC_KEY)||'{}'); } catch(e) { return {}; }
+}
+function saveLeadTimes(lt) { localStorage.setItem(FC_KEY, JSON.stringify(lt)); }
+
+function buildFcLeadTimeGrid() {
+  const lt   = loadLeadTimes();
+  const grid = document.getElementById('fc-leadtime-grid');
+  if (!grid) return;
+
+  let html = `<div class="fc-lt-grid" style="grid-template-columns:180px repeat(4,1fr)">
+    <div class="fc-lt-hdr">AMR Type</div>
+    <div class="fc-lt-hdr" style="text-align:center">Lead Time (days)</div>
+    <div class="fc-lt-hdr" style="text-align:center">Manufacture (days)</div>
+    <div class="fc-lt-hdr" style="text-align:center">Validate (days)</div>
+    <div class="fc-lt-hdr" style="text-align:center">Total</div>`;
+
+  getAmrTypes().forEach(a => {
+    const v   = lt[a] || {};
+    const ltd = v.ltd || 0;
+    const mfg = v.mfg || 0;
+    const val = v.val || 0;
+    const tot = ltd + mfg + val;
+    const safe = a.replace(/[^a-zA-Z0-9]/g,'_');
+    html += `
+      <div class="fc-lt-lbl">${a}</div>
+      <div class="fc-lt-cell">
+        <input class="fc-lt-input" type="number" min="0" max="999"
+          value="${ltd||''}" placeholder="0"
+          data-amr="${a}" data-field="ltd" oninput="fcUpdateLeadTime(this)">
+      </div>
+      <div class="fc-lt-cell">
+        <input class="fc-lt-input" type="number" min="0" max="999"
+          value="${mfg||''}" placeholder="0"
+          data-amr="${a}" data-field="mfg" oninput="fcUpdateLeadTime(this)">
+      </div>
+      <div class="fc-lt-cell">
+        <input class="fc-lt-input" type="number" min="0" max="999"
+          value="${val||''}" placeholder="0"
+          data-amr="${a}" data-field="val" oninput="fcUpdateLeadTime(this)">
+      </div>
+      <div class="fc-lt-cell">
+        <span class="fc-total" id="fc-tot-${safe}">${tot > 0 ? tot+'d' : '—'}</span>
+      </div>`;
+  });
+
+  grid.innerHTML = html + '</div>';
+}
+
+function fcUpdateLeadTime(input) {
+  const { amr, field } = input.dataset;
+  const v   = Math.max(0, parseInt(input.value) || 0);
+  const lt  = loadLeadTimes();
+  if (!lt[amr]) lt[amr] = {};
+  lt[amr][field] = v;
+  saveLeadTimes(lt);
+  const tot   = (lt[amr].ltd||0) + (lt[amr].mfg||0) + (lt[amr].val||0);
+  const safe  = amr.replace(/[^a-zA-Z0-9]/g,'_');
+  const totEl = document.getElementById('fc-tot-'+safe);
+  if (totEl) totEl.textContent = tot > 0 ? tot+'d' : '—';
+  renderForecast();
+}
+
+
+function renderForecast() {
+  buildFcLeadTimeGrid();
+  const el     = document.getElementById('fc-summary');
+  if (!el) return;
+
+  const lt     = loadLeadTimes();
+  const todayD = today();
+  const fmtD   = d => new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+  const fmtDd  = d => d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+  const subDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate()-n); return r; };
+  const daysFrom = d => Math.ceil((d - todayD) / 86400000);
+
+  // Only To Do orders
+  const EXCLUDED = new Set(['DISPATCH','DONE','REJECTED']);
+  const activeBuilds = builds.filter(b => b.stage === 'TO_DO');
+
+  if (!activeBuilds.length) {
+    el.innerHTML = `<div class="ms-wrap"><div class="ms-hdr"><div class="ms-title">Material Summary</div><div class="ms-sub">No active builds</div></div></div>`;
+    return;
+  }
+
+  // Build rows: one row per build that has something to report
+  // For each build × each critical part (AMR-specific):
+  //   - If date exists and it's AFTER today → delayed (ETA in future)
+  //   - If date exists and it's BEFORE/ON today → already in stock (skip, nothing to flag)
+  //   - If no date → compute order-by deadline = dispatchDate − totalLeadTime
+  const rows = activeBuilds.map(b => {
+    const critMap   = mpCriticality[b.amrType||''] || {};
+    const critParts = MP_PARTS.filter(p => critMap[p.key] !== false);
+    const comps     = b.components || {};
+    const ltCfg     = lt[b.amrType] || {};
+    const totalDays = (ltCfg.ltd||0) + (ltCfg.mfg||0) + (ltCfg.val||0);
+    const dispRaw   = b.dispatchPlan ? b.dispatchPlan+'-01' : b.dueDate;
+    const dispDate  = dispRaw ? new Date(dispRaw+'T00:00:00') : null;
+
+    const delayed   = []; // { partLabel, eta, daysLate }
+    const noDate    = []; // { partLabel, orderBy, daysUntil } — needs ordering
+    const onTrack   = []; // parts with date already arrived
+
+    critParts.forEach(p => {
+      // Label is AMR-specific: "Battery (Sherpa 10K)"
+      const partLabel = `${p.label} (${b.amrType||'Unknown'})`;
+      const dateStr   = (comps[p.key]||{}).date || '';
+
+      if (dateStr) {
+        const eta = new Date(dateStr+'T00:00:00');
+        if (eta <= todayD) {
+          onTrack.push(partLabel); // already in stock — no action needed
+        } else {
+          // Has a future ETA — check if it blocks production
+          // It's "delayed" if the ETA is after the order-by deadline (or if we have no
+          // dispatch date to compare, just flag it as a pending future delivery)
+          if (dispDate && totalDays > 0) {
+            const orderBy = subDays(dispDate, totalDays);
+            if (eta > orderBy) {
+              const daysLate = Math.ceil((eta - orderBy) / 86400000);
+              delayed.push({ partLabel, eta: fmtDd(eta), etaD: eta, daysLate });
+            }
+            // else on-track, ETA arrives before needed
+          } else {
+            // No dispatch date / lead time configured — just flag as pending
+            delayed.push({ partLabel, eta: fmtDd(eta), etaD: eta, daysLate: null });
+          }
+        }
+      } else {
+        // No date recorded — compute order-by deadline if possible
+        if (dispDate && totalDays > 0) {
+          const orderBy   = subDays(dispDate, totalDays);
+          const daysUntil = daysFrom(orderBy);
+          noDate.push({ partLabel, orderBy, orderByStr: fmtDd(orderBy), daysUntil });
+        } else {
+          // No dispatch date or lead times not configured
+          noDate.push({ partLabel, orderBy: null, orderByStr: null, daysUntil: null });
+        }
+      }
+    });
+
+    // Sort delayed by latest ETA first
+    delayed.sort((a,b_) => b_.etaD - a.etaD);
+    // Sort no-date by most urgent order-by first (overdue first, then soonest)
+    noDate.sort((a,b_) => {
+      if (!a.orderBy && !b_.orderBy) return 0;
+      if (!a.orderBy) return 1;
+      if (!b_.orderBy) return -1;
+      return a.orderBy - b_.orderBy;
+    });
+
+    return { b, delayed, noDate, onTrack, totalDays, dispDate };
+  }).filter(r => r.delayed.length > 0 || r.noDate.length > 0); // only show builds with something to action
+
+  if (!rows.length) {
+    // Still build and show the brief card (may show "configure lead times" or "all clear")
+    const brief2 = {};
+    // Brief is empty at this point — just show the card with all-clear
+    const noLeadTimes2 = getAmrTypes().every(a => { const c=lt[a]||{}; return !((c.ltd||0)+(c.mfg||0)+(c.val||0)); });
+    const briefHtml2 = `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:16px 18px;margin-bottom:14px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mut);text-transform:uppercase;margin-bottom:14px">📋 Order Brief — by AMR Type</div>
+      ${noLeadTimes2
+        ? `<div style="color:var(--ylw);font-size:11px">⚠ Configure lead times above to generate order deadlines.</div>`
+        : `<div style="color:var(--grn);font-size:11px;font-weight:700">✓ All critical materials on track — no orders required</div>`
+      }
+    </div>`;
+    el.innerHTML = briefHtml2 + `<div class="ms-wrap">
+      <div class="ms-hdr"><div class="ms-title">📋 Material Summary</div><div class="ms-sub">All ${activeBuilds.length} active builds — no material issues detected</div></div>
+      <div style="padding:24px 18px;color:var(--grn);font-size:12px;font-weight:700">✓ All critical materials on track</div>
+    </div>`;
+    return;
+  }
+
+  // ── ORDER BRIEF (grouped by AMR type → part → deadline) ──────────────────
+  // Structure: amrType → partKey → { partLabel, deadlines: [ {dateStr, dateD, qty, overdue, delayed} ] }
+  const brief = {}; // amrType → partKey → { label, entries: [{dateStr,dateD,qty,type}] }
+
+  rows.forEach(r => {
+    const amr = r.b.amrType || 'Unknown';
+    if (!brief[amr]) brief[amr] = {};
+
+    // No-date parts: group by order-by date
+    r.noDate.forEach(n => {
+      const key = n.partLabel.split(' (')[0]; // just part name without "(AMR)"
+      if (!brief[amr][key]) brief[amr][key] = { label: key, entries: {} };
+      const dk = n.orderByStr || 'NO_DATE';
+      if (!brief[amr][key].entries[dk]) brief[amr][key].entries[dk] = { dateStr: n.orderByStr, dateD: n.orderBy, qty: 0, type: n.daysUntil !== null && n.daysUntil < 0 ? 'overdue' : 'order' };
+      brief[amr][key].entries[dk].qty++;
+    });
+
+    // Delayed parts: group by ETA date, flag as delayed
+    r.delayed.forEach(d => {
+      const key = d.partLabel.split(' (')[0];
+      if (!brief[amr][key]) brief[amr][key] = { label: key, entries: {} };
+      const dk = 'DELAYED_' + d.eta;
+      if (!brief[amr][key].entries[dk]) brief[amr][key].entries[dk] = { dateStr: d.eta, dateD: d.etaD, qty: 0, type: 'delayed' };
+      brief[amr][key].entries[dk].qty++;
+    });
+  });
+
+  // Render brief
+  const briefBlocks = Object.entries(brief).map(([amr, parts]) => {
+    const lines = Object.values(parts).map(p => {
+      const entries = Object.values(p.entries).filter(e => e.dateStr !== null);
+      if (!entries.length) return null;
+
+      // Collapse all overdue into a single quantity
+      const overdueQty = entries.filter(e => e.type === 'overdue').reduce((s,e) => s+e.qty, 0);
+      const upcoming   = entries.filter(e => e.type === 'order').sort((a,b_) => a.dateD - b_.dateD);
+      const delayed    = entries.filter(e => e.type === 'delayed').sort((a,b_) => a.dateD - b_.dateD);
+
+      const clauses = [];
+      if (overdueQty > 0)
+        clauses.push(`<span style="color:var(--red);font-weight:700">${overdueQty} × ${p.label} — ORDER IMMEDIATELY</span>`);
+      upcoming.forEach(e =>
+        clauses.push(`<span>${e.qty} × ${p.label} by <strong>${e.dateStr}</strong></span>`)
+      );
+      delayed.forEach(e =>
+        clauses.push(`<span style="color:var(--red)">${e.qty} × ${p.label} delayed (ETA ${e.dateStr})</span>`)
+      );
+      return clauses.join(' &nbsp;·&nbsp; ');
+    }).filter(Boolean);
+
+    if (!lines.length) return null;
+
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:800;color:var(--acc);margin-bottom:6px;letter-spacing:.3px">${amr}</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--txt);line-height:1.6">
+        ${lines.map(l => `<div style="padding-left:10px;border-left:2px solid var(--bdr)">${l}</div>`).join('')}
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const noLeadTimes = getAmrTypes().every(a => {
+    const c = lt[a]||{}; return !((c.ltd||0)+(c.mfg||0)+(c.val||0));
+  });
+
+  const briefHtml = `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:16px 18px;margin-bottom:14px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mut);text-transform:uppercase;margin-bottom:14px">📋 Order Brief — by AMR Type</div>
+    ${noLeadTimes
+      ? `<div style="color:var(--ylw);font-size:11px">⚠ Configure lead times above to generate order deadlines.</div>`
+      : briefBlocks || `<div style="color:var(--grn);font-size:11px;font-weight:700">✓ All critical materials on track — no orders required</div>`
+    }
+  </div>`;
+
+  // Split into two sections: builds with delayed parts vs builds needing order dates
+  const delayedBuilds = rows.filter(r => r.delayed.length > 0);
+  const orderBuilds   = rows.filter(r => r.noDate.length > 0);
+
+  const renderBuildRow = (r, showDelayed, showNoDate) => {
+    const stg   = gs(r.b.stage);
+    const dispStr = r.dispDate ? fmtDd(r.dispDate) : '—';
+
+    let partsHtml = '<div class="ms-part-row">';
+
+    if (showDelayed) {
+      r.delayed.forEach(d => {
+        const daysLateStr = d.daysLate !== null
+          ? `<span style="font-size:9px;color:var(--mut)"> · ${d.daysLate}d late</span>`
+          : '';
+        partsHtml += `<div class="ms-part">
+          <span class="ms-pname">${d.partLabel}</span>
+          <span class="ms-delayed">⚠ ETA ${d.eta}${d.daysLate!==null?' (+'+d.daysLate+'d late)':''}</span>
+        </div>`;
+      });
+    }
+    if (showNoDate) {
+      r.noDate.forEach(n => {
+        let statusHtml;
+        if (!n.orderByStr) {
+          statusHtml = `<span class="ms-none">No date — configure lead times to get order deadline</span>`;
+        } else if (n.daysUntil < 0) {
+          statusHtml = `<span class="ms-order-overdue">⚠ Order overdue by ${Math.abs(n.daysUntil)}d (was ${n.orderByStr})</span>`;
+        } else if (n.daysUntil <= 7) {
+          statusHtml = `<span class="ms-order-by">Order by ${n.orderByStr} · <strong>${n.daysUntil}d remaining</strong></span>`;
+        } else if (n.daysUntil <= 21) {
+          statusHtml = `<span class="ms-order-by">Order by ${n.orderByStr} · ${n.daysUntil}d remaining</span>`;
+        } else {
+          statusHtml = `<span class="ms-order-ok">Order by ${n.orderByStr} · ${n.daysUntil}d remaining</span>`;
+        }
+        partsHtml += `<div class="ms-part">
+          <span class="ms-pname">${n.partLabel}</span>
+          ${statusHtml}
+        </div>`;
+      });
+    }
+    partsHtml += '</div>';
+
+    return `<tr onclick="openDetail('${r.b.key}')">
+      <td>
+        <div class="ms-build">${r.b.name}</div>
+        <div class="ms-meta">${r.b.key} · SN:${r.b.vehicleSerial||'—'}</div>
+      </td>
+      <td>
+        <span class="ms-stage" style="color:${stg.color};background:${stg.color}18;border:1px solid ${stg.color}40">${stg.short}</span>
+      </td>
+      <td style="font-size:10px;color:var(--mut)">${dispStr}</td>
+      <td>${partsHtml}</td>
+    </tr>`;
+  };
+
+  const thead = `<thead><tr>
+    <th style="min-width:170px">Build</th>
+    <th>Stage</th>
+    <th>Dispatch</th>
+    <th>Material</th>
+  </tr></thead>`;
+
+  let html = `<div class="ms-wrap">
+    <div class="ms-hdr">
+      <div class="ms-title">📋 Material Summary</div>
+      <div class="ms-sub">${activeBuilds.length} active builds · ${delayedBuilds.length} with delayed parts · ${orderBuilds.length} with unordered parts</div>
+    </div>
+    <div class="ms-scroll"><table class="ms-table">${thead}<tbody>`;
+
+  if (delayedBuilds.length) {
+    html += `<tr class="ms-section-hdr"><td colspan="4" style="color:var(--red)">⚠ Delayed Parts — ETA is after the order-by deadline (${delayedBuilds.length} build${delayedBuilds.length!==1?'s':''})</td></tr>`;
+    delayedBuilds.forEach(r => { html += renderBuildRow(r, true, false); });
+  }
+  if (orderBuilds.length) {
+    html += `<tr class="ms-section-hdr"><td colspan="4" style="color:var(--ylw)">📦 No Date Recorded — order-by deadline based on total lead time (${orderBuilds.length} build${orderBuilds.length!==1?'s':''})</td></tr>`;
+    orderBuilds.forEach(r => { html += renderBuildRow(r, false, true); });
+  }
+
+  html += `</tbody></table></div></div>`;
+  el.innerHTML = briefHtml + html;
+}
+
+function initForecast() {
+  buildFcLeadTimeGrid();
+}
+
+populateAMRFilter();
+renderAll();
+initMpPanel();
+initForecast();
+
+</script>
+</body>
+</html>
