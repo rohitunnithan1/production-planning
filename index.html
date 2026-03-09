@@ -756,6 +756,7 @@ function parseJiraCSV(text){
   if(cur)lines.push(cur);
   const hdr=parseRow(lines[0]);
   const col=(row,k)=>(row[hdr.indexOf(k)]||'').trim();
+  const colLast=(row,k)=>(row[hdr.lastIndexOf(k)]||'').trim();
   // Multi-key lookup — returns first non-empty value across candidate column names
   const colAny=(row,...keys)=>{for(const k of keys){const v=col(row,k);if(v)return v;}return'';};
   const fmtD=d=>{
@@ -811,7 +812,7 @@ function parseJiraCSV(text){
         wiringHarness:    {qty:col(r,'Custom field (Wiring harness Kit)'),date:fmtD(col(r,'Custom field (Wiring harness Date)'))},
         autoUnhitch:      {qty:'',date:''},
         electronicsBoards:{qty:'',date:fmtD(col(r,'Custom field (Electronics Boards)'))},
-        battery:          {qty:'',date:fmtD(col(r,'Custom field (Battery)'))},
+        battery:          {qty:'',date:fmtD(colLast(r,'Custom field (Battery)'))},
         charger:          {qty:'',date:fmtD(col(r,'Custom field (Charger)'))},
         chargerBay:       {qty:'',date:''},
       },
